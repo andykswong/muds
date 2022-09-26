@@ -1,6 +1,6 @@
 {
   "name": "@muds/runtime",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Micro-framework for interactive data-driven systems",
   "type": "module",
   "sideEffects": false,

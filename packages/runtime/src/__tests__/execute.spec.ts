@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+
 import { jest } from '@jest/globals';
 
 import { execute, RuntimeState } from '../execute';

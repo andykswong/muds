@@ -38,9 +38,9 @@ describe('mapEffect', () => {
     const mockDispatch = jest.fn() as Dispatch<MappedAction>;
 
     const effect: Effect<Action> = (dispatch) => dispatch(Action.First);
-    const mappedEffect = mapEffect(effect, mapAction)!;
+    const mappedEffect = mapEffect(effect, mapAction);
 
-    mappedEffect(mockDispatch);
+    mappedEffect?.(mockDispatch);
 
     expect(mockDispatch).toBeCalledTimes(1);
     expect(mockDispatch).toHaveBeenCalledWith(MappedAction.Third);

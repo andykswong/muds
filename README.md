@@ -17,6 +17,8 @@ Install via NPM for JS/TS projects:
 npm install --save @muds/runtime
 ```
 
+### Simple System Example
+
 Below is a simple system that gets user's name from a prompt:
 
 ```javascript
@@ -49,6 +51,8 @@ const system = {
 const runtime = execute(system);
 runtime.destroy();
 ```
+
+### React Integration
 
 `@muds/react` provides a high-order system for React view rendering. Below is a simple counter example:
 
@@ -86,6 +90,18 @@ const system = ReactSystem(CounterSystem);
 execute(system, { root, props: 0 });
 
 ```
+
+### Redux DevTools Integration
+
+`muds` can be easily integrated with [Redux DevTools](https://github.com/reduxjs/redux-devtools) for debugging state changes. You just need to wrap your system with `WithDevTools`:
+
+```javascript
+import { execute, WithDevTools } from '@muds/runtime';
+
+const system = WithDevTools(YourSystem);
+execute(system, YourSystemProps);
+```
+
 
 ## API Usage
 With `muds`, you write stateless system with 4 APIs that define its model and view:

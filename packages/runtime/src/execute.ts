@@ -14,6 +14,7 @@ export function execute<Model, Action, View, Props>(
 
     dispatch(action: Action) {
       if (this.state === RuntimeState.Running) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         applyUpdate(system.update(this.model!, action));
       }
     },
@@ -21,6 +22,7 @@ export function execute<Model, Action, View, Props>(
     destroy() {
       if (this.state === RuntimeState.Running) {
         this.state = RuntimeState.Destroyed;
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         system.destroy?.(this.model!);
         this.model = this.view = null;
       }
