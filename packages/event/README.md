@@ -7,6 +7,9 @@
 ## Overview
 `@muds/event` is the core event signal library for `muds`, the modular microframework for interactive data-oriented systems. It provides the event emitter and listener interface, as well as several useful event implementations.
 
+# API Documentation
+http://andykswong.github.io/muds
+
 ## Usage
 ```shell
 npm install --save @muds/event

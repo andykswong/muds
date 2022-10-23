@@ -15,6 +15,7 @@ export interface Event<T extends unknown[]> {
   emit(...data: T): void;
 }
 
+/** A typesafe event signal. */
 export class Event<T> implements Event<T> {
   /** Creates a simple event instance. */
   public static create<T extends unknown[]>(): Event<T> {

@@ -3,6 +3,7 @@
 <br />
 <p align="center">
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
+  <a href="https://github.com/andykswong/muds/actions/workflows/build.yaml"><img src="https://github.com/andykswong/muds/actions/workflows/build.yaml/badge.svg" alt="build" /></a>
 </p>
 
 ## Overview
@@ -19,6 +20,9 @@ Because `muds` is modular, it can be used within any architecture or framework. 
 |[`@muds/store`](./packages/store)|<a href="https://www.npmjs.com/package/@muds/store"><img src="https://img.shields.io/npm/v/@muds/store?label=@muds/store" alt="NPM @muds/store" /></a>|Core data structure store library|
 |[`@muds/event`](./packages/event)|<a href="https://www.npmjs.com/package/@muds/event"><img src="https://img.shields.io/npm/v/@muds/event?label=@muds/event" alt="NPM @muds/event" /></a>|Core event signal library|
 |[`@muds/react`](./packages/react)|<a href="https://www.npmjs.com/package/@muds/react"><img src="https://img.shields.io/npm/v/@muds/react?label=@muds/react" alt="NPM @muds/react" /></a> |React integration utils|
+
+# API Documentation
+http://andykswong.github.io/muds
 
 ## License
 This repository and the code inside it is licensed under the MIT License. Read [LICENSE](./LICENSE) for more information.

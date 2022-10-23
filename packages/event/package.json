@@ -81,5 +81,8 @@
       "!**/__tests__/**"
     ],
     "coverageDirectory": "coverage"
+  },
+  "typedoc": {
+    "entryPoint": "src/index.ts"
   }
 }

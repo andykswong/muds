@@ -1,3 +1,8 @@
+/**
+ * Generational index ID, which consists of an index and a generation values combined as a single number.
+ * @packageDocumentation
+ */
+
 export const MAX_SAFE_GENERATION = (1 << 21) - 1;
 export const UNIT_GENERATION = 2 ** 32;
 

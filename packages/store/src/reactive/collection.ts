@@ -15,6 +15,7 @@ export interface CollectionEvents<K, V> {
   readonly onUpdate?: Event<[thisArg: this, key: K, value: V, prevValue: V]>;
 }
 
+/** Collection change event data. */
 export type CollectionChangeEvent<K, V, T extends CollectionEvents<K, V>> =
   | [eventType: 'add', thisArg: T, key: K, value: V]
   | [eventType: 'clear', thisArg: T]

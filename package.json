@@ -1,6 +1,12 @@
 {
   "name": "muds",
   "description": "Modular microframework for interactive data-oriented systems",
+  "scripts": {
+    "build": "npm run build -ws",
+    "clean": "rimraf docs && npm run clean -ws",
+    "doc": "typedoc --entryPointStrategy packages --name muds --readme ./README.md --out docs ./",
+    "test": "npm test -ws"
+  },
   "workspaces": [
     "./packages/*"
   ],
@@ -18,5 +24,8 @@
   "bugs": {
     "url": "https://github.com/andykswong/muds/issues"
   },
-  "homepage": "https://github.com/andykswong/muds"
+  "homepage": "https://github.com/andykswong/muds",
+  "devDependencies": {
+    "typedoc-plugin-resolve-crossmodule-references": "^0.3"
+  }
 }

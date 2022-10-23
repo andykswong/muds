@@ -108,3 +108,6 @@ dist
 
 # Mac OS
 .DS_Store
+
+# Typedoc output
+docs/

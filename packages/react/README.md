@@ -7,6 +7,9 @@
 ## Overview
 `@muds/react` is the [React](https://reactjs.org/) integrataion utils for `muds`, the modular microframework for interactive data-oriented systems. It provides useful utils for integrating your React components with `muds` libraries.
 
+# API Documentation
+http://andykswong.github.io/muds
+
 ## Usage
 ```shell
 npm install --save @muds/react @muds/event
