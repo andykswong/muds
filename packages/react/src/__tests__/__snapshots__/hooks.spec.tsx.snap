@@ -1,0 +1,33 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`useEventReducer should reduce events to state 1`] = `
+<span>
+  <button
+    onClick={[Function]}
+  >
+    -
+  </button>
+   0 
+  <button
+    onClick={[Function]}
+  >
+    +
+  </button>
+</span>
+`;
+
+exports[`useEventReducer should reduce events to state 2`] = `
+<span>
+  <button
+    onClick={[Function]}
+  >
+    -
+  </button>
+   1 
+  <button
+    onClick={[Function]}
+  >
+    +
+  </button>
+</span>
+`;

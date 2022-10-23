@@ -29,6 +29,7 @@ module.exports = api => {
     config.plugins.push(
       ["babel-plugin-add-import-extension", { "extension": "js" }]
     );
+    config.ignore.push('**/__tests__/**');
   }
 
   return config;

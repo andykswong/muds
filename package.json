@@ -1,0 +1,22 @@
+{
+  "name": "muds",
+  "description": "Modular microframework for interactive data-oriented systems",
+  "workspaces": [
+    "./packages/*"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andykswong/muds.git"
+  },
+  "keywords": [
+    "data-oriented",
+    "muds",
+    "microframework"
+  ],
+  "author": "Andy K.S. Wong <andykswong@outlook.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/andykswong/muds/issues"
+  },
+  "homepage": "https://github.com/andykswong/muds"
+}
