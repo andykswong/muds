@@ -7,7 +7,7 @@
 ## Overview
 `@muds/node` is a minimal 2D/3D scene node graph library for [muds](https://github.com/andykswong/muds), a modular microframework for interactive data-oriented systems.
 
-# API Documentation
+## API Documentation
 http://andykswong.github.io/muds
 
 ## Usage

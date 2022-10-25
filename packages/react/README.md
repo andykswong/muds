@@ -5,9 +5,9 @@
 </p>
 
 ## Overview
-`@muds/react` is the [React](https://reactjs.org/) integrataion utils for `muds`, the modular microframework for interactive data-oriented systems. It provides useful utils for integrating your React components with `muds` libraries.
+`@muds/react` is the [React](https://reactjs.org/) integrataion utils for [muds](https://github.com/andykswong/muds), the modular microframework for interactive data-oriented systems. It provides useful utils for integrating your React components with `muds` libraries.
 
-# API Documentation
+## API Documentation
 http://andykswong.github.io/muds
 
 ## Usage

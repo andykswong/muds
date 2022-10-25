@@ -5,9 +5,9 @@
 </p>
 
 ## Overview
-`@muds/store` is the core data structure store library for `muds`, the modular microframework for interactive data-oriented systems. This package is what enables `muds` to be data-oriented. It provides useful data structures to model your data store and structure your app in [Entity component system (ECS)](https://en.wikipedia.org/wiki/Entity_component_system) architecture.
+`@muds/store` is the core data structure store library for [muds](https://github.com/andykswong/muds), the modular microframework for interactive data-oriented systems. This package is what enables `muds` to be data-oriented. It provides useful data structures to model your data store and structure your app in [Entity component system (ECS)](https://en.wikipedia.org/wiki/Entity_component_system) architecture.
 
-# API Documentation
+## API Documentation
 http://andykswong.github.io/muds
 
 ## Usage
