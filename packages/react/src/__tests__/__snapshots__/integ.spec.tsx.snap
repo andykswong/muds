@@ -1,0 +1,46 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`integ integrate IoC container and events with React component 1`] = `
+<span>
+  <button
+    onClick={[Function]}
+  >
+    10
+  </button>
+  <button
+    onClick={[Function]}
+  >
+    20
+  </button>
+</span>
+`;
+
+exports[`integ integrate IoC container and events with React component 2`] = `
+<span>
+  <button
+    onClick={[Function]}
+  >
+    11
+  </button>
+  <button
+    onClick={[Function]}
+  >
+    20
+  </button>
+</span>
+`;
+
+exports[`integ integrate IoC container and events with React component 3`] = `
+<span>
+  <button
+    onClick={[Function]}
+  >
+    11
+  </button>
+  <button
+    onClick={[Function]}
+  >
+    21
+  </button>
+</span>
+`;
