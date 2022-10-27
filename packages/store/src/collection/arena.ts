@@ -1,23 +1,15 @@
-import { Collection } from 'typescript';
+import { ESMap } from 'typescript';
 import { indexOf } from '../id';
 import { IdGenerator } from './generator';
+import { MapGetSet } from './types';
 
 /** An arena holds values that can be accessed by numerical keys. */
-export interface Arena<T> extends Collection<number>, Iterable<[number, T]> {
+export interface Arena<T> extends ESMap<number, T>, MapGetSet<number, T>, Iterable<[number, T]> {
   /** Adds a value to the arena and returns its key. */
   add(value: T): number;
 
-  /** Gets a value by key. Returns undefined if there is no such entry. */
-  get(key: number): T | undefined;
-
-  /** Returns an Iterator for all entries in the arena. */
-  entries(): Iterator<[number, T]>;
-
-  /** Returns an Iterator for all values in the arena. */
-  values(): Iterator<T>;
-
-  /** Calls `action` once for each entry in the arena. */
-  forEach(action: (value: T, key: number) => void): void;
+  /** Updates a value on the arena. Does nothing if the key does not exist. */
+  set(key: number, value: T): this;
 }
 
 /** An arena that uses generational index as key. */
@@ -61,7 +53,7 @@ export class GenerationalArena<T> implements Arena<T> {
   }
 
   public get(id: number): T | undefined {
-    return this.has(id) ? this.data[indexOf(id)] : undefined;
+    return this.allocator.has(id) ? this.data[indexOf(id)] : undefined;
   }
 
   public has(id: number): boolean {
@@ -70,6 +62,13 @@ export class GenerationalArena<T> implements Arena<T> {
 
   public keys(): IterableIterator<number> {
     return this.allocator.values();
+  }
+
+  public set(id: number, value: T): this {
+    if (this.allocator.has(id)) {
+      this.data[indexOf(id)] = value;
+    }
+    return this;
   }
 
   public * values(): IterableIterator<T> {

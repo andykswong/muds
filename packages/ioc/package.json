@@ -1,6 +1,6 @@
 {
   "name": "@muds/ioc",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Minimal inversion of control container for muds",
   "type": "module",
   "sideEffects": false,

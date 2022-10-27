@@ -1,4 +1,4 @@
-import { ESMap, Set } from 'typescript';
+import { ESMap, Iterator, Set } from 'typescript';
 import { Event } from '@muds/event';
 import { Arena, Deque, Generator, List } from '../collection';
 import { CollectionEvents } from './collection';
@@ -8,6 +8,7 @@ export class ObservableArena<T> implements Arena<T>, CollectionEvents<number, T>
   public readonly onClear: Event<[thisArg: this]> = Event.create();
   public readonly onAdd: Event<[thisArg: this, key: number, value: T]> = Event.create();
   public readonly onDelete: Event<[thisArg: this, key: number, value: T]> = Event.create();
+  public readonly onUpdate: Event<[thisArg: this, index: number, value: T, prevValue: T]> = Event.create();
 
   public constructor(
     /** The underlying arena. */
@@ -53,6 +54,15 @@ export class ObservableArena<T> implements Arena<T>, CollectionEvents<number, T>
 
   public keys(): Iterator<number> {
     return this.arena.keys();
+  }
+
+  public set(key: number, value: T): this {
+    const prevValue = this.arena.get(key);
+    if (prevValue !== undefined) {
+      this.arena.set(key, value);
+      this.onUpdate.emit(this, key, value, prevValue);
+    }
+    return this;
   }
 
   public values(): Iterator<T> {
@@ -167,7 +177,11 @@ export class ObservableGenerator<T> implements Generator<T>, CollectionEvents<T,
     return this.generator.values();
   }
 
-  public forEach(action: (value: T) => void): void {
+  public entries(): Iterator<[T, T]> {
+    return this.generator.entries();
+  }
+
+  public forEach(action: (value: T, key: T) => void): void {
     this.generator.forEach(action);
   }
 
@@ -201,6 +215,10 @@ export class ObservableList<T> implements List<T>, CollectionEvents<number, T> {
     return this.list.get(index);
   }
 
+  public has(index: number): boolean {
+    return this.list.has(index);
+  }
+
   public clear(): void {
     this.list.clear();
     this.onClear.emit(this);
@@ -232,6 +250,10 @@ export class ObservableList<T> implements List<T>, CollectionEvents<number, T> {
 
   public entries(): Iterator<[number, T]> {
     return this.list.entries();
+  }
+
+  public keys(): Iterator<number> {
+    return this.list.keys();
   }
 
   public values(): Iterator<T> {

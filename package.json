@@ -8,7 +8,12 @@
     "test": "npm test -ws"
   },
   "workspaces": [
-    "./packages/*"
+    "./packages/event",
+    "./packages/gltf",
+    "./packages/ioc",
+    "./packages/node",
+    "./packages/react",
+    "./packages/store"
   ],
   "repository": {
     "type": "git",

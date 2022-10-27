@@ -1,19 +1,13 @@
-import { Collection } from 'typescript';
+import { Collection, ReadonlySet } from 'typescript';
 import { create as id, generationOf, indexOf, MAX_SAFE_GENERATION } from '../id';
 
 /** Generator of values. */
-export interface Generator<T> extends Collection<T>, Iterable<T> {
+export interface Generator<T> extends Collection<T>, ReadonlySet<T>, Iterable<T> {
   /** Creates a new value. */
   add(): T;
 
   /** Deletes a value and returns if the value originally exists */
   delete(value: T): boolean;
-
-  /** Returns an Iterator for all active values. */
-  values(): Iterator<T>;
-
-  /** Calls `action` once for each active entry. */
-  forEach(action: (value: T) => void): void;
 }
 
 /** Generator of generational index IDs. */
@@ -66,9 +60,9 @@ export class IdGenerator implements Generator<number> {
     return true;
   }
 
-  public forEach(action: (id: number) => void): void {
+  public forEach(action: (value: number, key: number) => void): void {
     for (const id of this.values()) {
-      action(id);
+      action(id, id);
     }
   }
 
@@ -87,6 +81,12 @@ export class IdGenerator implements Generator<number> {
       if (this.generations[i] >= 0) {
         yield id(i, generation);
       }
+    }
+  }
+
+  public * entries(): IterableIterator<[number, number]> {
+    for (const value of this.values()) {
+      yield [value, value];
     }
   }
 

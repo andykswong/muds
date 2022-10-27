@@ -1,10 +1,10 @@
 import { ReadonlyESMap } from 'typescript';
-
 import { MUDS_DEBUG } from '../config';
+import { MapGet } from '../collection';
 import { CollectionEvents } from './collection';
 
 /** A unique key index derived from a collection. */
-export interface UniqueIndex<U, K> extends ReadonlyESMap<U, K>, Iterable<[U, K]> {
+export interface UniqueIndex<U, K> extends ReadonlyESMap<U, K>, MapGet<U, K>, Iterable<[U, K]> {
 }
 
 /** A unique key index derived from a collection. */

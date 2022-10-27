@@ -1,6 +1,6 @@
 {
   "name": "@muds/store",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Core data structure store library for muds",
   "type": "module",
   "sideEffects": false,

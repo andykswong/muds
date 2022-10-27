@@ -1,6 +1,6 @@
 {
   "name": "@muds/react",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "React integration for muds",
   "type": "module",
   "sideEffects": false,
@@ -46,7 +46,8 @@
   },
   "homepage": "https://github.com/andykswong/muds",
   "dependencies": {
-    "@muds/event": "^0.1"
+    "@muds/event": "^0.1",
+    "@muds/ioc": "^0.1"
   },
   "peerDependencies": {
     "react": ">=18.0",

@@ -1,8 +1,8 @@
-/** A readonly list. */
-export interface ReadonlyList<T> extends Iterable<T> {
-  /** Size of this container. */
-  readonly size: number;
+import { Iterator, ReadonlyCollection } from 'typescript';
+import { MapGet, MapGetSet } from './types';
 
+/** A readonly list. */
+export interface ReadonlyList<T> extends ReadonlyCollection<number>, MapGet<number, T>, Iterable<T> {
   /** Gets a value by index. Returns undefined if there is no such entry. */
   get(index: number): T | undefined;
 
@@ -53,7 +53,7 @@ export interface Queue<T> {
 }
 
 /** A list. */
-export interface List<T> extends ReadonlyList<T>, Stack<T> {
+export interface List<T> extends ReadonlyList<T>, Stack<T>, MapGetSet<number, T> {
   /** Clears the container. */
   clear(): void;
 
@@ -71,6 +71,10 @@ export class ArrayList<T> implements List<T> {
 
   public get last(): T | undefined {
     return this.data[this.data.length - 1];
+  }
+
+  public has(index: number): boolean {
+    return index in this.data;
   }
 
   public get(index: number): T | undefined {
@@ -97,6 +101,10 @@ export class ArrayList<T> implements List<T> {
 
   public entries(): IterableIterator<[number, T]> {
     return this.data.entries();
+  }
+
+  public keys(): IterableIterator<number> {
+    return this.data.keys();
   }
 
   public values(): IterableIterator<T> {

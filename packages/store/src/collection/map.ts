@@ -1,8 +1,9 @@
 import { ESMap } from 'typescript';
 import { indexOf } from '../id';
+import { MapGetSet } from './types';
 
 /** Generational index map backend by a Map. */
-export class GenIdMap<V> implements ESMap<number, V>, Iterable<[number, V]> {
+export class GenIdMap<V> implements ESMap<number, V>, MapGetSet<number, V>, Iterable<[number, V]> {
   private readonly map: Map<number, [number, V]> = new Map();
 
   public get size(): number {
@@ -68,7 +69,7 @@ export class GenIdMap<V> implements ESMap<number, V>, Iterable<[number, V]> {
 }
 
 /** Sparse set based map with generational index as key. */
-export class SparseSetMap<V> implements ESMap<number, V>, Iterable<[number, V]> {
+export class SparseSetMap<V> implements ESMap<number, V>, MapGetSet<number, V>, Iterable<[number, V]> {
   private readonly sparse: number[] = [];
   private readonly ids: number[] = [];
   private readonly dense: V[] = [];

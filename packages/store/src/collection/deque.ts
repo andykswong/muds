@@ -105,12 +105,23 @@ export class ArrayDeque<T> implements Deque<T>, List<T> {
     }
   }
 
+  public has(index: number): boolean {
+    return Number.isInteger(index) && index >= 0 && index < this.size;
+  }
+
   public set(index: number, value: T): void {
     const frontSize = this.frontStack.length - this.frontOffset;
     if (index >= frontSize) {
       this.backStack[this.backOffset + index - frontSize] = value;
     } else {
       this.frontStack[this.frontStack.length - 1 - index] = value;
+    }
+  }
+
+  public * keys(): IterableIterator<number> {
+    const size = this.size;
+    for (let i = 0; i < size; ++i) {
+      yield i;
     }
   }
 
