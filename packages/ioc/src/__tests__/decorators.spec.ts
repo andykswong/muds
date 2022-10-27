@@ -1,4 +1,4 @@
-import { inject, module, multi, provide, singleton, tagged } from '../decorators';
+import { inject, module, multi, order, provide, singleton, tagged } from '../decorators';
 import { MODULE, PROVIDER, TAG_ID, TAG_MULTI, TAG_SINGLETON } from '../symbols';
 
 describe('module', () => {
@@ -44,6 +44,32 @@ describe('singleton', () => {
     }
 
     const expectedMetadata = { name: providerName, tags: { [TAG_ID]: id, [TAG_SINGLETON]: true }, parameters: [] };
+    expect(Reflect.getOwnMetadata(PROVIDER, Module.prototype, providerName)).toEqual(expectedMetadata);
+    expect(Reflect.getOwnMetadata(MODULE, Module.prototype)).toEqual([expectedMetadata]);
+  });
+});
+
+describe('order', () => {
+  it('should set order metadata', () => {
+    const providerName = 'getTest';
+
+    @module() class Module {
+      @order(10) getTest() { return 'hello'; }
+    }
+
+    const expectedMetadata = { name: providerName, tags: {}, parameters: [], order: 10 };
+    expect(Reflect.getOwnMetadata(PROVIDER, Module.prototype, providerName)).toEqual(expectedMetadata);
+  });
+
+  it('should work with @provide', () => {
+    const id = Symbol('test');
+    const providerName = 'getTest';
+
+    @module() class Module {
+      @provide(id) @order(10) getTest() { return 'hello'; }
+    }
+
+    const expectedMetadata = { name: providerName, tags: { [TAG_ID]: id }, parameters: [], order: 10 };
     expect(Reflect.getOwnMetadata(PROVIDER, Module.prototype, providerName)).toEqual(expectedMetadata);
     expect(Reflect.getOwnMetadata(MODULE, Module.prototype)).toEqual([expectedMetadata]);
   });

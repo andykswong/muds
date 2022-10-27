@@ -42,6 +42,21 @@ export function singleton(target: unknown, propertyKey: string | symbol) {
   Reflect.defineMetadata(PROVIDER, metadata, target as Target, propertyKey);
 }
 
+/** Decorates a class method with binding order. A smaller value has higher priority. */
+export function order(order: number): MethodDecorator {
+  return (target: unknown, propertyKey: string | symbol) => {
+    const metadata: ProviderMetadata = {
+      name: propertyKey,
+      tags: {},
+      parameters: [],
+      ...Reflect.getOwnMetadata(PROVIDER, target as Target, propertyKey)
+    };
+    metadata.order = order;
+
+    Reflect.defineMetadata(PROVIDER, metadata, target as Target, propertyKey);
+  };
+}
+
 /** Decorates a method or parameter with tags. */
 export function tagged(tags: Tags): MethodDecorator & ParameterDecorator {
   return (target: unknown, propertyKey: string | symbol, indexOrDescriptor: number | PropertyDescriptor) => {

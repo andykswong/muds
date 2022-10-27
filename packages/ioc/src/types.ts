@@ -19,6 +19,9 @@ export interface ProviderMetadata {
 
   /** Provider dependency parameter tags. */
   parameters: Tags[],
+
+  /** Provider priority order. */
+  order?: number,
 }
 
 /** Metadatam of an identifier binding. */

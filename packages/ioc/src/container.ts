@@ -35,7 +35,7 @@ export class SimpleContainer implements Container {
     for (const provider of providers) {
       const id = provider.tags[TAG_ID] as Identifier;
       const bindings = this.bindings.get(id) || [];
-      bindings.push({
+      insertInOrder(bindings, {
         module: module as Record<string | symbol, (...args: unknown[]) => unknown>,
         ...provider,
       });
@@ -109,4 +109,13 @@ function match(binding: BindingMetadata, tags?: Tags): boolean {
     }
   }
   return true;
+}
+
+function insertInOrder(bindings: BindingMetadata[], binding: BindingMetadata) {
+  bindings.push(binding);
+  let i: number;
+  for (i = bindings.length - 2; i >= 0 && (bindings[i].order || 0) > (binding.order || 0); --i) {
+    bindings[i+1] = bindings[i];
+  }
+  bindings[i+1] = binding;
 }

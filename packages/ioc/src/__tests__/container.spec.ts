@@ -1,10 +1,10 @@
 import { jest } from '@jest/globals';
 import { Container, SimpleContainer } from '../container';
-import { inject, module, multi, provide, singleton, tagged } from '../decorators';
+import { inject, module, multi, order, provide, singleton, tagged } from '../decorators';
 import { TAG_ID, TAG_SINGLETON } from '../symbols';
 
 describe('Container', () => {
-  const id0 = Symbol('id0'), id1 = Symbol('id1'), id2 = Symbol('id2'), id3 = Symbol('id3');
+  const id0 = Symbol('id0'), id1 = Symbol('id1'), id2 = Symbol('id2'), id3 = Symbol('id3'), id4 = Symbol('id4');
 
   @module() class Module {
     @provide(id0) ten() { return 10; }
@@ -12,13 +12,15 @@ describe('Container', () => {
   }
 
   @module() class MultiModule {
+    @provide(id0) @tagged({ id: 2 }) @order(2) second() { return 2; }
     @provide(id0) @tagged({ id: 1 }) @singleton first() { return 1; }
-    @provide(id0) @tagged({ id: 2 }) second() { return 2; }
     @provide(id2) @singleton third() { return 3; }
     @provide(id3) injectSecond(@inject(id0) @tagged({ id: 2 }) second: number) { return second; }
     @provide(id1) nums(@inject(id0) @multi num: number[], @inject(id2) third: number) {
       return [...num, third].join();
     }
+    @provide(id4) unordered1() { return 1; }
+    @provide(id4) unordered2() { return 2; }
   }
 
   describe('add', () => {
@@ -94,11 +96,18 @@ describe('Container', () => {
   });
 
   describe('multiGet', () => {
-    it('should return array of results from matching providers', () => {
+    it('should return ordered array of results from matching providers', () => {
       const container = Container.create();
       container.add(new MultiModule());
 
       expect(container.multiGet(id0)).toEqual([1, 2]);
+    });
+
+    it('should return unordered results from matching providers sorted by declaration order', () => {
+      const container = Container.create();
+      container.add(new MultiModule());
+
+      expect(container.multiGet(id4)).toEqual([1, 2]);
     });
 
     it('should return result from provider with matching tags', () => {
