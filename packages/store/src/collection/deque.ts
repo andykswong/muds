@@ -52,7 +52,7 @@ export class ArrayDeque<T> implements Deque<T>, List<T> {
 
   public unshift(value: T): this {
     if (this.backOffset) {
-      this.backStack[this.backOffset--] = value;
+      this.backStack[--this.backOffset] = value;
     } else {
       this.frontStack.push(value);
     }
@@ -61,7 +61,7 @@ export class ArrayDeque<T> implements Deque<T>, List<T> {
 
   public push(value: T): this {
     if (this.frontOffset) {
-      this.frontStack[this.frontOffset--] = value;
+      this.frontStack[--this.frontOffset] = value;
     } else {
       this.backStack.push(value);
     }

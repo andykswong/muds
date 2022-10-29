@@ -48,13 +48,13 @@ export class IdGenerator implements Generator<number> {
     }
 
     const index = indexOf(id);
-    // Use negative sign to indicate free space
-    let generation = -((this.generations[index] + 1) & MAX_SAFE_GENERATION);
+    let generation = (this.generations[index] + 1) & MAX_SAFE_GENERATION;
     if (!index && !generation) {
       ++generation; // avoids 0 Id as it is reserved for null.
     }
 
-    this.generations[index] = generation;
+    // Use negative sign to indicate free space
+    this.generations[index] = -generation;
     this.freeList.push(index);
 
     return true;
