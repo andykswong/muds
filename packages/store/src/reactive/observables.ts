@@ -4,15 +4,17 @@ import { Arena, Deque, Generator, List } from '../collection';
 import { CollectionEvents } from './collection';
 
 /** An observable arena. */
-export class ObservableArena<T> implements Arena<T>, CollectionEvents<number, T> {
+export class ObservableArena<T, I extends number = number>
+  implements Arena<T, I>, CollectionEvents<I, T>
+{
   public readonly onClear: Event<[thisArg: this]> = Event.create();
-  public readonly onAdd: Event<[thisArg: this, key: number, value: T]> = Event.create();
-  public readonly onDelete: Event<[thisArg: this, key: number, value: T]> = Event.create();
-  public readonly onUpdate: Event<[thisArg: this, index: number, value: T, prevValue: T]> = Event.create();
+  public readonly onAdd: Event<[thisArg: this, key: I, value: T]> = Event.create();
+  public readonly onDelete: Event<[thisArg: this, key: I, value: T]> = Event.create();
+  public readonly onUpdate: Event<[thisArg: this, index: I, value: T, prevValue: T]> = Event.create();
 
   public constructor(
     /** The underlying arena. */
-    protected readonly arena: Arena<T>
+    protected readonly arena: Arena<T, I>
   ) {
   }
 
@@ -20,15 +22,15 @@ export class ObservableArena<T> implements Arena<T>, CollectionEvents<number, T>
     return this.arena.size;
   }
 
-  public has(key: number): boolean {
+  public has(key: I): boolean {
     return this.arena.has(key);
   }
 
-  public get(key: number): T | undefined {
+  public get(key: I): T | undefined {
     return this.arena.get(key);
   }
 
-  public add(value: T): number {
+  public add(value: T): I {
     const key = this.arena.add(value);
     this.onAdd.emit(this, key, value);
     return key;
@@ -39,7 +41,7 @@ export class ObservableArena<T> implements Arena<T>, CollectionEvents<number, T>
     this.onClear.emit(this);
   }
 
-  public delete(key: number): boolean {
+  public delete(key: I): boolean {
     const value = this.arena.get(key);
     if (value !== undefined && this.arena.delete(key)) {
       this.onDelete.emit(this, key, value);
@@ -48,15 +50,15 @@ export class ObservableArena<T> implements Arena<T>, CollectionEvents<number, T>
     return false;
   }
 
-  public entries(): Iterator<[number, T]> {
+  public entries(): Iterator<[I, T]> {
     return this.arena.entries();
   }
 
-  public keys(): Iterator<number> {
+  public keys(): Iterator<I> {
     return this.arena.keys();
   }
 
-  public set(key: number, value: T): this {
+  public set(key: I, value: T): this {
     const prevValue = this.arena.get(key);
     if (prevValue !== undefined) {
       this.arena.set(key, value);
@@ -69,11 +71,11 @@ export class ObservableArena<T> implements Arena<T>, CollectionEvents<number, T>
     return this.arena.values();
   }
 
-  public forEach(action: (value: T, key: number) => void): void {
+  public forEach(action: (value: T, key: I) => void): void {
     this.arena.forEach(action);
   }
 
-  public [Symbol.iterator](): Iterator<[number, T]> {
+  public [Symbol.iterator](): Iterator<[I, T]> {
     return this.arena.entries();
   }
 }

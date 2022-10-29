@@ -11,7 +11,7 @@ export interface Generator<T> extends Collection<T>, ReadonlySet<T>, Iterable<T>
 }
 
 /** Generator of generational index IDs. */
-export class IdGenerator implements Generator<number> {
+export class IdGenerator<T extends number = number> implements Generator<T> {
   private readonly generations: number[] = [];
   private readonly freeList: number[] = [];
 
@@ -24,7 +24,7 @@ export class IdGenerator implements Generator<number> {
     this.freeList.length = 0;
   }
 
-  public add(): number {
+  public add(): T {
     let index: number;
     let generation: number;
 
@@ -42,7 +42,7 @@ export class IdGenerator implements Generator<number> {
     return id(index, generation);
   }
 
-  public delete(id: number): boolean {
+  public delete(id: T): boolean {
     if (!this.has(id)) {
       return false;
     }
@@ -60,22 +60,22 @@ export class IdGenerator implements Generator<number> {
     return true;
   }
 
-  public forEach(action: (value: number, key: number) => void): void {
+  public forEach(action: (value: T, key: T) => void): void {
     for (const id of this.values()) {
       action(id, id);
     }
   }
 
-  public has(id: number): boolean {
+  public has(id: T): boolean {
     return (indexOf(id) < this.generations.length
       && generationOf(id) === this.generations[indexOf(id)]);
   }
 
-  public keys(): IterableIterator<number> {
+  public keys(): IterableIterator<T> {
     return this.values();
   }
 
-  public * values(): IterableIterator<number> {
+  public * values(): IterableIterator<T> {
     for (let i = 0; i < this.generations.length; ++i) {
       const generation = this.generations[i];
       if (this.generations[i] >= 0) {
@@ -84,13 +84,13 @@ export class IdGenerator implements Generator<number> {
     }
   }
 
-  public * entries(): IterableIterator<[number, number]> {
+  public * entries(): IterableIterator<[T, T]> {
     for (const value of this.values()) {
       yield [value, value];
     }
   }
 
-  public [Symbol.iterator](): IterableIterator<number> {
+  public [Symbol.iterator](): IterableIterator<T> {
     return this.values();
   }
 }

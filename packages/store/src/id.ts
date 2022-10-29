@@ -7,8 +7,8 @@ export const MAX_SAFE_GENERATION = (1 << 21) - 1;
 export const UNIT_GENERATION = 2 ** 32;
 
 /** Creates a generational index ID from index and generation parts. */
-export function create(index: number, generation: number): number {
-  return ((generation & MAX_SAFE_GENERATION) * UNIT_GENERATION + (index >>> 0));
+export function create<T extends number = number>(index: number, generation: number): T {
+  return ((generation & MAX_SAFE_GENERATION) * UNIT_GENERATION + (index >>> 0)) as T;
 }
 
 /** Returns the index part (lower 32bit) of a generational index ID. */
