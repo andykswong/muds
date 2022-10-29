@@ -1,6 +1,6 @@
 import { ESMap } from 'typescript';
 import { indexOf } from '../id';
-import { MapGetSet } from './types';
+import { MapGetSet } from '../types';
 
 /** Generational index map backend by a Map. */
 export class GenIdMap<V, I extends number = number>

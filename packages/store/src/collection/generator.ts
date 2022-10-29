@@ -49,7 +49,7 @@ export class IdGenerator<T extends number = number> implements Generator<T> {
 
     const index = indexOf(id);
     let generation = (this.generations[index] + 1) & MAX_SAFE_GENERATION;
-    if (!index && !generation) {
+    if (!generation) {
       ++generation; // avoids 0 Id as it is reserved for null.
     }
 

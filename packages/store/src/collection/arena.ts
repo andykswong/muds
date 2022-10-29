@@ -1,7 +1,7 @@
 import { ESMap } from 'typescript';
 import { indexOf } from '../id';
 import { IdGenerator } from './generator';
-import { MapGetSet } from './types';
+import { MapGetSet } from '../types';
 
 /** An arena holds values that can be accessed by numerical keys. */
 export interface Arena<T, I extends number = number>
@@ -16,26 +16,26 @@ export interface Arena<T, I extends number = number>
 
 /** An arena that uses generational index as key. */
 export class GenerationalArena<T, I extends number = number> implements Arena<T, I> {
-  private readonly allocator: IdGenerator<I> = new IdGenerator();
+  private ids: IdGenerator<I> = new IdGenerator();
   private readonly data: T[] = [];
 
   public get size(): number {
-    return this.allocator.size;
+    return this.ids.size;
   }
 
   public add(value: T): I {
-    const id = this.allocator.add();
+    const id = this.ids.add();
     this.data[indexOf(id)] = value;
     return id;
   }
 
   public clear(): void {
-    this.allocator.clear();
+    this.ids.clear();
     this.data.length = 0;
   }
 
   public delete(id: I): boolean {
-    if (this.allocator.delete(id)) {
+    if (this.ids.delete(id)) {
       delete this.data[indexOf(id)];
       return true;
     }
@@ -43,38 +43,38 @@ export class GenerationalArena<T, I extends number = number> implements Arena<T,
   }
 
   public * entries(): IterableIterator<[I, T]> {
-    for (const id of this.allocator.values()) {
+    for (const id of this.ids.values()) {
       yield [id, this.data[indexOf(id)]];
     }
   }
 
   public forEach(action: (value: T, key: I) => void): void {
-    this.allocator.forEach((id) => {
+    this.ids.forEach((id) => {
       action(this.data[indexOf(id)], id);
     });
   }
 
   public get(id: I): T | undefined {
-    return this.allocator.has(id) ? this.data[indexOf(id)] : undefined;
+    return this.ids.has(id) ? this.data[indexOf(id)] : undefined;
   }
 
   public has(id: I): boolean {
-    return this.allocator.has(id);
+    return this.ids.has(id);
   }
 
   public keys(): IterableIterator<I> {
-    return this.allocator.values();
+    return this.ids.values();
   }
 
   public set(id: I, value: T): this {
-    if (this.allocator.has(id)) {
+    if (this.ids.has(id)) {
       this.data[indexOf(id)] = value;
     }
     return this;
   }
 
   public * values(): IterableIterator<T> {
-    for (const id of this.allocator.values()) {
+    for (const id of this.ids.values()) {
       yield this.data[indexOf(id)];
     }
   }

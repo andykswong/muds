@@ -9,7 +9,7 @@ export interface MapGet<K, V> {
 /**
  * Getter and setter interface for a key-value map.
  */
- export interface MapGetSet<K, V> extends MapGet<K, V> {
+export interface MapGetSet<K, V> extends MapGet<K, V> {
   /** Sets a key-value pair. */
   set(key: K, value: V): void;
 }

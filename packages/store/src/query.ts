@@ -1,4 +1,4 @@
-import { MapGet } from './collection';
+import { MapGet } from './types';
 
 /**
  * The RHS values of a unique join.

@@ -1,5 +1,5 @@
 import { Iterator, ReadonlyCollection } from 'typescript';
-import { MapGet, MapGetSet } from './types';
+import { MapGet, MapGetSet } from '../types';
 
 /** A readonly list. */
 export interface ReadonlyList<T> extends ReadonlyCollection<number>, MapGet<number, T>, Iterable<T> {

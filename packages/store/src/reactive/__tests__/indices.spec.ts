@@ -4,6 +4,23 @@ import { mockCollectionEvents } from './mocks';
 describe('UniqueIndex', () => {
 
   describe('fromCollection', () => {
+    it('should collect existing items into index', () => {
+      const K1 = 1, UK1 = 21, K2 = 2, UK2 = 22;
+      const map = new Map<number, [number, string]>();
+      map.set(K1, [UK1, 'hello']);
+      map.set(K2, [UK2, 'world']);
+
+      const collection = {
+        ...mockCollectionEvents<number, [number, string]>(false),
+        entries() { return map.entries(); }
+      };
+      const index = UniqueIndex.fromCollection(collection, (_, [k]) => k);
+
+      expect(index.size).toBe(2);
+      expect(index.get(UK1)).toBe(K1);
+      expect(index.get(UK2)).toBe(K2);
+    });
+
     it('should index items on collection add event', () => {
       const collection = mockCollectionEvents<number, [number, string]>(false);
       const index = UniqueIndex.fromCollection(collection, (_, [k]) => k);
