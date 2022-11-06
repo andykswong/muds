@@ -3,8 +3,8 @@ import type { BindingMetadata, CustomTags, Identifier, ProviderMetadata, Tags } 
 
 /** Inversion of control container. */
 export interface Container {
-  /** Adds a module to the container. */
-  add(module: unknown): void;
+  /** Adds modules to the container. */
+  add(...modules: unknown[]): void;
 
   /** Gets one instance from container. */
   get<T>(id: Identifier, tags?: CustomTags): T | undefined;
@@ -26,20 +26,22 @@ export class SimpleContainer implements Container {
   private bindings: Map<Identifier, BindingMetadata[]> = new Map();
   private cache: Map<Identifier, unknown[]> = new Map();
 
-  public add(module: unknown): void {
-    const providers: ProviderMetadata[] | undefined = Reflect.getOwnMetadata(MODULE, Object.getPrototypeOf(module));
-    if (!providers) {
-      return; // Not a module
-    }
+  public add(...modules: unknown[]): void {
+    for (const module of modules) {
+      const providers: ProviderMetadata[] | undefined = Reflect.getMetadata(MODULE, Object.getPrototypeOf(module));
+      if (!providers) {
+        continue; // Not a module
+      }
 
-    for (const provider of providers) {
-      const id = provider.tags[TAG_ID] as Identifier;
-      const bindings = this.bindings.get(id) || [];
-      insertInOrder(bindings, {
-        module: module as Record<string | symbol, (...args: unknown[]) => unknown>,
-        ...provider,
-      });
-      this.bindings.set(id, bindings);
+      for (const provider of providers) {
+        const id = provider.tags[TAG_ID] as Identifier;
+        const bindings = this.bindings.get(id) || [];
+        insertInOrder(bindings, {
+          module: module as Record<string | symbol, (...args: unknown[]) => unknown>,
+          ...provider,
+        });
+        this.bindings.set(id, bindings);
+      }
     }
   }
 
@@ -104,7 +106,7 @@ function match(binding: BindingMetadata, tags?: Tags): boolean {
     return true;
   }
   for (const tag in tags) {
-    if (binding.tags[tag] !== tags[tag]) {
+    if (tags[tag] !== binding.tags[tag]) {
       return false;
     }
   }
@@ -115,7 +117,7 @@ function insertInOrder(bindings: BindingMetadata[], binding: BindingMetadata) {
   bindings.push(binding);
   let i: number;
   for (i = bindings.length - 2; i >= 0 && (bindings[i].order || 0) > (binding.order || 0); --i) {
-    bindings[i+1] = bindings[i];
+    bindings[i + 1] = bindings[i];
   }
-  bindings[i+1] = binding;
+  bindings[i + 1] = binding;
 }

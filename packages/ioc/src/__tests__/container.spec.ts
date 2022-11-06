@@ -11,6 +11,10 @@ describe('Container', () => {
     @provide(id1) @singleton tens(@inject(id0) ten: number) { return [ten, ten]; }
   }
 
+  @module() class Module2 {
+    @provide(id2) two(@inject(id0) ten: number) { return ten - 8; }
+  }
+
   @module() class MultiModule {
     @provide(id0) @tagged({ id: 2 }) @order(2) second() { return 2; }
     @provide(id0) @tagged({ id: 1 }) @singleton first() { return 1; }
@@ -35,6 +39,21 @@ describe('Container', () => {
       expect(container['bindings'].get(id1))
         .toEqual([
           { module: m, name: 'tens', tags: { [TAG_ID]: id1, [TAG_SINGLETON]: true }, parameters: [{ [TAG_ID]: id0 }] }
+        ]);
+    });
+
+    it('should add list of modules to container', () => {
+      const container = Container.create() as SimpleContainer;
+      const m = new Module();
+      const m2 = new Module2();
+      container.add(m, m2);
+
+      expect(container['bindings'].size).toBe(3);
+      expect(container['bindings'].get(id0))
+        .toEqual([{ module: m, name: 'ten', tags: { [TAG_ID]: id0 }, parameters: [] }]);
+      expect(container['bindings'].get(id2))
+        .toEqual([
+          { module: m2, name: 'two', tags: { [TAG_ID]: id2 }, parameters: [{ [TAG_ID]: id0 }] }
         ]);
     });
 

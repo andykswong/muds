@@ -7,22 +7,38 @@ type Target = Record<string, unknown>;
 export function module(): ClassDecorator {
   // eslint-disable-next-line @typescript-eslint/ban-types
   return <T extends Function>(ctor: T) => {
-    Reflect.defineMetadata(MODULE, Reflect.getOwnMetadata(MODULE, ctor.prototype) || [], ctor.prototype);
+    Reflect.defineMetadata(MODULE, Reflect.getMetadata(MODULE, ctor.prototype) || [], ctor.prototype);
   };
 }
 
 /** Decorates a class method as a provider binding. */
-export function provide(id: Identifier): MethodDecorator {
+export function provide(id?: Identifier): MethodDecorator {
   return (target: unknown, propertyKey: string | symbol) => {
-    const providers: ProviderMetadata[] = Reflect.getOwnMetadata(MODULE, target as Target) || [];
+    const providers: ProviderMetadata[] = Reflect.getMetadata(MODULE, target as Target) || [];
     const metadata: ProviderMetadata = {
       name: propertyKey,
       tags: {},
       parameters: [],
       ...Reflect.getOwnMetadata(PROVIDER, target as Target, propertyKey)
     };
-    metadata.tags[TAG_ID] = id;
-    providers.push(metadata);
+    // Defaults to use return type as ID tag
+    // TODO: log warning if the tag is undefined
+    metadata.tags[TAG_ID] = id ?? Reflect.getOwnMetadata('design:returntype', target as Target, propertyKey);
+
+    // Overrides provider of same name from base class
+    const overrideIndex = providers.findIndex(provider => provider.name === metadata.name);
+    if (overrideIndex < 0) {
+      providers.push(metadata);
+    } else {
+      providers[overrideIndex] = {
+        ...providers[overrideIndex],
+        ...metadata,
+        tags: {
+          ...providers[overrideIndex].tags,
+          ...metadata.tags,
+        },
+      };
+    }
 
     Reflect.defineMetadata(MODULE, providers, target as Target);
     Reflect.defineMetadata(PROVIDER, metadata, target as Target, propertyKey);
@@ -80,8 +96,15 @@ export function tagged(tags: Tags): MethodDecorator & ParameterDecorator {
 }
 
 /** Decorates a method parameter to inject a binding. */
-export function inject(id: Identifier): ParameterDecorator {
-  return tagged({ [TAG_ID]: id });
+export function inject(id?: Identifier): ParameterDecorator {
+  return (target: unknown, propertyKey: string | symbol, parameterIndex: number) => {
+    // Defaults to use parameter type as ID tag
+    const tag = id ?? Reflect.getOwnMetadata('design:paramtypes', target as Target, propertyKey)?.[parameterIndex];
+    if (tag !== undefined) {
+      tagged({ [TAG_ID]: tag })(target as Target, propertyKey, parameterIndex);
+    }
+    // TODO: log warning if the tag is undefined
+  };
 }
 
 /** Decorates a method parameter to multi-inject a binding. */
