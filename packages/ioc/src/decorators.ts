@@ -15,11 +15,10 @@ export function module(): ClassDecorator {
 export function provide(id?: Identifier): MethodDecorator {
   return (target: unknown, propertyKey: string | symbol) => {
     const providers: ProviderMetadata[] = Reflect.getMetadata(MODULE, target as Target) || [];
-    const metadata: ProviderMetadata = {
+    const metadata: ProviderMetadata = Reflect.getOwnMetadata(PROVIDER, target as Target, propertyKey) || {
       name: propertyKey,
       tags: {},
       parameters: [],
-      ...Reflect.getOwnMetadata(PROVIDER, target as Target, propertyKey)
     };
     // Defaults to use return type as ID tag
     // TODO: log warning if the tag is undefined
@@ -47,11 +46,10 @@ export function provide(id?: Identifier): MethodDecorator {
 
 /** Decorates a class method as a singleton provider. */
 export function singleton(target: unknown, propertyKey: string | symbol) {
-  const metadata: ProviderMetadata = {
+  const metadata: ProviderMetadata = Reflect.getOwnMetadata(PROVIDER, target as Target, propertyKey) || {
     name: propertyKey,
     tags: {},
     parameters: [],
-    ...Reflect.getOwnMetadata(PROVIDER, target as Target, propertyKey),
   };
   metadata.tags[TAG_SINGLETON] = true;
 
@@ -61,11 +59,10 @@ export function singleton(target: unknown, propertyKey: string | symbol) {
 /** Decorates a class method with binding order. A smaller value has higher priority. */
 export function order(order: number): MethodDecorator {
   return (target: unknown, propertyKey: string | symbol) => {
-    const metadata: ProviderMetadata = {
+    const metadata: ProviderMetadata = Reflect.getOwnMetadata(PROVIDER, target as Target, propertyKey) || {
       name: propertyKey,
       tags: {},
       parameters: [],
-      ...Reflect.getOwnMetadata(PROVIDER, target as Target, propertyKey)
     };
     metadata.order = order;
 
@@ -76,11 +73,10 @@ export function order(order: number): MethodDecorator {
 /** Decorates a method or parameter with tags. */
 export function tagged(tags: Tags): MethodDecorator & ParameterDecorator {
   return (target: unknown, propertyKey: string | symbol, indexOrDescriptor: number | PropertyDescriptor) => {
-    const metadata: ProviderMetadata = {
+    const metadata: ProviderMetadata = Reflect.getOwnMetadata(PROVIDER, target as Target, propertyKey) || {
       name: propertyKey,
       tags: {},
       parameters: [],
-      ...Reflect.getOwnMetadata(PROVIDER, target as Target, propertyKey),
     };
     if (isNaN(indexOrDescriptor as number)) { // MethodDecorator
       metadata.tags = { ...tags, ...metadata.tags };

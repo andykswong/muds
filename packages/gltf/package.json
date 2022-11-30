@@ -20,7 +20,7 @@
     "prebuild": "npm run lint",
     "build": "npm run babel && npm run tsc",
     "lint": "eslint src --ext .ts,.tsx",
-    "babel": "cross-env-shell babel src -d dist --source-maps --extensions '.ts' --out-file-extension .js",
+    "babel": "babel src -d dist --source-maps --extensions '.ts' --out-file-extension .js",
     "tsc": "tsc --project tsconfig.build.json --emitDeclarationOnly",
     "build:spec": "node script/gltf-schema-ts.mjs src/spec",
     "test": "npm run jest",

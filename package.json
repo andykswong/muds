@@ -1,6 +1,6 @@
 {
   "name": "muds",
-  "description": "Modular microframework for interactive data-oriented systems",
+  "description": "Modular microframework for interactive data-oriented simulations",
   "scripts": {
     "build": "npm run build -ws",
     "clean": "rimraf docs && npm run clean -ws",

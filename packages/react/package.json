@@ -20,7 +20,7 @@
     "prebuild": "npm run lint",
     "build": "npm run babel && npm run tsc",
     "lint": "eslint src --ext .ts,.tsx",
-    "babel": "cross-env-shell babel src -d dist --source-maps --extensions '.ts,.tsx' --out-file-extension .js",
+    "babel": "babel src -d dist --source-maps --extensions '.ts,.tsx' --out-file-extension .js",
     "tsc": "tsc --emitDeclarationOnly",
     "test": "npm run jest",
     "jest": "cross-env NODE_OPTIONS=--experimental-vm-modules npx jest",
