@@ -1,11 +1,11 @@
 import { ESMap } from 'typescript';
 import { indexOf } from '../id';
 import { IdGenerator } from './generator';
-import { MapGetSet } from '../types';
+import { MapCRUD } from '../types';
 
 /** An arena holds values that can be accessed by numerical keys. */
 export interface Arena<T, I extends number = number>
-  extends ESMap<I, T>, MapGetSet<I, T>, Iterable<[I, T]>
+  extends ESMap<I, T>, MapCRUD<I, T>, Iterable<[I, T]>
 {
   /** Adds a value to the arena and returns its key. */
   add(value: T): I;

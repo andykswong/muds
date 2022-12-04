@@ -10,7 +10,7 @@ export interface Container {
   get<T>(id: Identifier, tags?: CustomTags): T | undefined;
 
   /** Gets all matching instances from container. */
-  multiGet<T>(id: Identifier, tags?: CustomTags): T[];
+  getAll<T>(id: Identifier, tags?: CustomTags): T[];
 }
 
 /** Inversion of control container. */
@@ -58,7 +58,7 @@ export class SimpleContainer implements Container {
     return undefined;
   }
 
-  public multiGet<T>(id: Identifier, tags?: CustomTags): T[] {
+  public getAll<T>(id: Identifier, tags?: CustomTags): T[] {
     const results: T[] = [];
     const bindings = this.bindings.get(id);
     if (bindings) {
@@ -85,7 +85,7 @@ export class SimpleContainer implements Container {
 
     const args = binding.parameters.map((parameterTags) => {
       if (parameterTags[TAG_MULTI]) {
-        return this.multiGet(parameterTags[TAG_ID] as Identifier, parameterTags);
+        return this.getAll(parameterTags[TAG_ID] as Identifier, parameterTags);
       }
       return this.get(parameterTags[TAG_ID] as Identifier, parameterTags);
     });

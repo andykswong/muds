@@ -57,7 +57,7 @@ export function singleton(target: unknown, propertyKey: string | symbol) {
 }
 
 /** Decorates a class method with binding order. A smaller value has higher priority. */
-export function order(order: number): MethodDecorator {
+export function order(order = 0): MethodDecorator {
   return (target: unknown, propertyKey: string | symbol) => {
     const metadata: ProviderMetadata = Reflect.getOwnMetadata(PROVIDER, target as Target, propertyKey) || {
       name: propertyKey,

@@ -1,10 +1,10 @@
 import { ESMap } from 'typescript';
 import { indexOf } from '../id';
-import { MapGetSet } from '../types';
+import { MapCRUD } from '../types';
 
 /** Generational index map backend by a Map. */
 export class GenIdMap<V, I extends number = number>
-  implements ESMap<I, V>, MapGetSet<I, V>, Iterable<[I, V]>
+  implements ESMap<I, V>, MapCRUD<I, V>, Iterable<[I, V]>
 {
   private readonly map: Map<number, [I, V]> = new Map();
 
@@ -72,7 +72,7 @@ export class GenIdMap<V, I extends number = number>
 
 /** Sparse set based map with generational index as key. */
 export class SparseSetMap<V, I extends number = number>
-  implements ESMap<I, V>, MapGetSet<I, V>, Iterable<[I, V]>
+  implements ESMap<I, V>, MapCRUD<I, V>, Iterable<[I, V]>
 {
   private readonly sparse: number[] = [];
   private readonly ids: I[] = [];

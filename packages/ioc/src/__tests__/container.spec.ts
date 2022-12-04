@@ -114,32 +114,32 @@ describe('Container', () => {
     });
   });
 
-  describe('multiGet', () => {
+  describe('getAll', () => {
     it('should return ordered array of results from matching providers', () => {
       const container = Container.create();
       container.add(new MultiModule());
 
-      expect(container.multiGet(id0)).toEqual([1, 2]);
+      expect(container.getAll(id0)).toEqual([1, 2]);
     });
 
     it('should return unordered results from matching providers sorted by declaration order', () => {
       const container = Container.create();
       container.add(new MultiModule());
 
-      expect(container.multiGet(id4)).toEqual([1, 2]);
+      expect(container.getAll(id4)).toEqual([1, 2]);
     });
 
     it('should return result from provider with matching tags', () => {
       const container = Container.create();
       container.add(new MultiModule());
 
-      expect(container.multiGet(id0, { id: 1 })).toEqual([1]);
+      expect(container.getAll(id0, { id: 1 })).toEqual([1]);
     });
 
     it('should return empty array for unknown ids', () => {
       const id = Symbol('id');
       const container = Container.create();
-      expect(container.multiGet(id)).toEqual([]);
+      expect(container.getAll(id)).toEqual([]);
     });
   });
 });
