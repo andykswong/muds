@@ -18,5 +18,5 @@ export function useInject<T>(id: Identifier, tags?: CustomTags): T | undefined {
 
 /** Injects values from IoC container. */
 export function useMultiInject<T>(id: Identifier, tags?: CustomTags): T[] {
-  return useContainer().multiGet(id, tags);
+  return useContainer().getAll(id, tags);
 }

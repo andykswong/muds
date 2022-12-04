@@ -51,9 +51,9 @@ class Module {
 const container = Container.create();
 container.add(new Module());
 
-// 3. use get(id, tags?) or multiGet(id, tags?) to get injectables
+// 3. use get(id, tags?) or getAll(id, tags?) to get injectables
 container.get(id0); // 'foo'
-container.multiGet(id1); // [{ bar: 'foo' }, { bar: 2 }]
+container.getAll(id1); // [{ bar: 'foo' }, { bar: 2 }]
 container.get(id2); // [{ bar: 'foo' }, { bar: 2 }]
 container.get(id1, { type: 2 }); // { bar: 2 }
 ```
