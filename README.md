@@ -24,7 +24,7 @@ Documentation: http://andykswong.github.io/muds
 
 |Package|NPM|Description|
 |-------|---|-----------|
-|[`@muds/genindex`](./packages/genindex)|<a href="https://www.npmjs.com/package/@muds/genindex"><img src="https://img.shields.io/npm/v/@muds/genindex?label=@muds/genindex" alt="NPM @muds/genindex" /></a>|Generational index library|
+|[`generational-index`](./packages/generational-index)|<a href="https://www.npmjs.com/package/generational-index"><img src="https://img.shields.io/npm/v/@muds/generational-index?label=generational-index" alt="NPM generational-index" /></a>|Generational index library|
 
 ## License
 This repository and the code inside it is licensed under the MIT License. Read [LICENSE](./LICENSE) for more information.

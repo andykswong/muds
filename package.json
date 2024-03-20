@@ -1,6 +1,6 @@
 {
   "name": "muds",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Modular library for data-oriented design",
   "type": "module",
   "sideEffects": false,
@@ -41,7 +41,7 @@
     "packages/genindex"
   ],
   "dependencies": {
-    "@muds/genindex": "^0.2"
+    "generational-index": "^0.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.20",

@@ -1,5 +1,5 @@
 {
-  "name": "@muds/genindex",
+  "name": "generational-index",
   "version": "0.2.0",
   "description": "Generational index library",
   "type": "module",
@@ -30,7 +30,7 @@
   "keywords": [
     "data-oriented",
     "genindex",
-    "muds",
+    "generational-index",
     "typescript"
   ],
   "author": "Andy K.S. Wong <andykswong@outlook.com>",
