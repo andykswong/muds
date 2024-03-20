@@ -1,5 +1,5 @@
 {
-  "name": "genindex",
+  "name": "@muds/genindex",
   "version": "0.2.0",
   "description": "Generational index library",
   "type": "module",

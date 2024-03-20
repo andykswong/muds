@@ -41,7 +41,7 @@
     "packages/genindex"
   ],
   "dependencies": {
-    "genindex": "^0.2"
+    "@muds/genindex": "^0.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.20",

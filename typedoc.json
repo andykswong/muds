@@ -3,7 +3,7 @@
   "name": "mithic",
   "entryPointStrategy": "packages",
   "entryPoints": [
-    "packages/*"
+    "packages/genindex"
   ],
   "out": "./docs",
   "includeVersion": true,
