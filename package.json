@@ -1,19 +1,17 @@
 {
   "name": "muds",
-  "description": "Modular microframework for interactive data-oriented simulations",
-  "scripts": {
-    "build": "npm run build -ws",
-    "clean": "rimraf docs && npm run clean -ws",
-    "doc": "typedoc --entryPointStrategy packages --name muds --readme ./README.md --out docs ./",
-    "test": "npm test -ws"
+  "version": "0.2.0",
+  "description": "Modular library for data-oriented design",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": "./index.js"
   },
-  "workspaces": [
-    "./packages/event",
-    "./packages/gltf",
-    "./packages/ioc",
-    "./packages/node",
-    "./packages/react",
-    "./packages/store"
+  "files": [
+    "./index.js",
+    "./index.d.ts"
   ],
   "repository": {
     "type": "git",
@@ -22,7 +20,9 @@
   "keywords": [
     "data-oriented",
     "muds",
-    "microframework"
+    "typescript",
+    "webassembly",
+    "wasm"
   ],
   "author": "Andy K.S. Wong <andykswong@outlook.com>",
   "license": "MIT",
@@ -30,7 +30,36 @@
     "url": "https://github.com/andykswong/muds/issues"
   },
   "homepage": "https://github.com/andykswong/muds",
+  "scripts": {
+    "prepublishOnly": "npm run clean && npm run build && npm test && npm run doc",
+    "build": "npm run build -ws",
+    "clean": "npm run clean -ws && rimraf docs",
+    "doc": "typedoc",
+    "test": "npm test -ws"
+  },
+  "workspaces": [
+    "packages/genindex"
+  ],
+  "dependencies": {
+    "genindex": "^0.2"
+  },
   "devDependencies": {
-    "typedoc-plugin-resolve-crossmodule-references": "^0.3"
+    "@babel/cli": "^7.20",
+    "@babel/core": "^7.20",
+    "@babel/plugin-proposal-explicit-resource-management": "^7.20",
+    "@babel/preset-env": "^7.20",
+    "@babel/preset-typescript": "^7.20",
+    "@typescript-eslint/eslint-plugin": "^7.0",
+    "@typescript-eslint/parser": "^7.0",
+    "@types/jest": "^29.5",
+    "@types/node": "^20.0",
+    "babel-jest": "^29.5",
+    "core-js": "^3.30",
+    "cross-env": "^7.0",
+    "eslint": "^8.50",
+    "jest": "^29.5",
+    "rimraf": "^5.0",
+    "typedoc": "^0.25",
+    "typescript": "^5.4"
   }
 }

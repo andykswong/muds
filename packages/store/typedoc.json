@@ -1,0 +1,10 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "@muds/store",
+  "entryPoints": [
+    "src/index.ts"
+  ],
+  "out": "./docs",
+  "includeVersion": true,
+  "readme": "./README.md"
+}

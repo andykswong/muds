@@ -1,0 +1,17 @@
+{
+	"javascript.preferences.quoteStyle": "single",
+	"javascript.preferences.importModuleSpecifierEnding": "js",
+	"typescript.preferences.quoteStyle": "single",
+	"typescript.preferences.importModuleSpecifierEnding": "js",
+	"jest.coverageFormatter": "GutterFormatter",
+	"jest.runMode": "on-demand",
+	"jest.nodeEnv": {
+        "NODE_OPTIONS": "--experimental-vm-modules"
+    },
+	"typescript.tsdk": "node_modules/typescript/lib",
+	"rust-analyzer.cargo.target": "wasm32-unknown-unknown",
+	"rust-analyzer.cargo.features": [
+		"serde"
+	],
+	"rust-analyzer.cargo.noDefaultFeatures": true,
+}
