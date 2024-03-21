@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "crates/collections",
     "crates/genindex"
 ]
 resolver = "2"
