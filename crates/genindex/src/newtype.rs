@@ -121,7 +121,7 @@ impl<T, I: GenIndex> From<(I::Index, I::Generation)> for NewTypeIndex<T, I> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{GenIndex, Index, NewTypeIndex};
+    use crate::{GenIndex, IndexPair, NewTypeIndex};
 
     struct TestType;
 
@@ -166,10 +166,10 @@ mod tests {
         use alloc::vec;
         use serde_json::{json, Value};
 
-        let expected_index = NewTypeIndex::<TestType, Index>::from_raw_parts(123, 456);
+        let expected_index = NewTypeIndex::<TestType, IndexPair>::from_raw_parts(123, 456);
         let json: Value = json!([123, 456]);
 
-        let index: NewTypeIndex<TestType, Index> = serde_json::from_value(json).unwrap();
+        let index: NewTypeIndex<TestType, IndexPair> = serde_json::from_value(json).unwrap();
 
         assert_eq!(index, expected_index);
     }
@@ -180,7 +180,7 @@ mod tests {
         use alloc::vec;
         use serde_json::{json, Value};
 
-        let index = NewTypeIndex::<TestType, Index>::from_raw_parts(123, 456);
+        let index = NewTypeIndex::<TestType, IndexPair>::from_raw_parts(123, 456);
         let expected_json: Value = json!([123, 456]);
 
         let json: Value = serde_json::to_value(index).unwrap();
