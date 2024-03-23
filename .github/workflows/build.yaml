@@ -13,8 +13,6 @@ jobs:
         with:
           node-version: "20"
       - run: npm ci
-        name: Install
       - run: npm run build
-        name: Build
       - run: npm test
-        name: Run tests
+      - run: cargo test -p genindex --all-features

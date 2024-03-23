@@ -1,16 +1,14 @@
-use crate::UnsignedNum;
-use core::{fmt::Debug, hash::Hash};
-use num::{One, Zero};
+use num::{One, Unsigned, Zero};
 
 /// An index with generation that can be used as a weak reference to array values.
 /// The generation part allows indices to be reused without suffering from [ABA problem](https://en.wikipedia.org/wiki/ABA_problem),
 /// so that data can be safely stored in a packed array.
-pub trait GenIndex: Copy + Debug + Default + Hash + PartialEq + PartialOrd {
+pub trait GenIndex: Copy + Default + PartialEq + PartialOrd {
     /// The type of index value.
-    type Index: UnsignedNum;
+    type Index: Unsigned;
 
     /// The type of generation value.
-    type Generation: UnsignedNum;
+    type Generation: Unsigned;
 
     /// Returns the maximum generation value.
     fn max_generation() -> Self::Generation;
@@ -25,18 +23,36 @@ pub trait GenIndex: Copy + Debug + Default + Hash + PartialEq + PartialOrd {
     fn generation(&self) -> Self::Generation;
 
     /// Returns a null value.
+    ///
+    /// # Examples
+    /// ```
+    /// # use genindex::{GenIndex, IndexU64};
+    /// assert_eq!(IndexU64::null(), IndexU64::default());
+    /// ```
     #[inline]
     fn null() -> Self {
         Default::default()
     }
 
     /// Checks if the value represents null.
+    ///
+    /// # Examples
+    /// ```
+    /// # use genindex::{GenIndex, IndexU64};
+    /// assert!(IndexU64::null().is_null());
+    /// ```
     #[inline]
     fn is_null(&self) -> bool {
         *self == Self::null()
     }
 
     /// Returns the next generation value.
+    ///
+    /// # Examples
+    /// ```
+    /// # use genindex::{GenIndex, IndexU64};
+    /// assert_eq!(IndexU64::from_raw_parts(10, 11).next_generation(), IndexU64::from_raw_parts(10, 12));
+    /// ```
     #[inline]
     fn next_generation(&self) -> Self {
         let next_gen = self.generation();

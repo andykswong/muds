@@ -15,29 +15,14 @@ use core::{
 )]
 #[repr(transparent)]
 pub struct NewTypeIndex<T, I: GenIndex = IndexF64> {
-    index: I,
+    value: I,
     marker: PhantomData<*const T>,
-}
-
-impl<T, I: GenIndex> NewTypeIndex<T, I> {
-    #[inline]
-    pub fn from_index(index: I) -> Self {
-        Self {
-            index,
-            marker: PhantomData,
-        }
-    }
-
-    #[inline]
-    pub fn to_index(&self) -> I {
-        self.index
-    }
 }
 
 impl<T, I: GenIndex> Clone for NewTypeIndex<T, I> {
     #[inline]
     fn clone(&self) -> Self {
-        Self::from_index(self.index.clone())
+        self.value.into()
     }
 }
 
@@ -46,35 +31,38 @@ impl<T, I: GenIndex> Copy for NewTypeIndex<T, I> {}
 impl<T, I: GenIndex> Default for NewTypeIndex<T, I> {
     #[inline]
     fn default() -> Self {
-        Self::from_index(Default::default())
+        NewTypeIndex {
+            value: Default::default(),
+            marker: PhantomData,
+        }
     }
 }
 
-impl<T, I: GenIndex> Debug for NewTypeIndex<T, I> {
+impl<T, I: Debug + GenIndex> Debug for NewTypeIndex<T, I> {
     #[inline]
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        self.index.fmt(f)
+        self.value.fmt(f)
     }
 }
 
-impl<T, I: GenIndex> Hash for NewTypeIndex<T, I> {
+impl<T, I: GenIndex + Hash> Hash for NewTypeIndex<T, I> {
     #[inline]
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.index.hash(state)
+        self.value.hash(state)
     }
 }
 
 impl<T, I: GenIndex> PartialOrd for NewTypeIndex<T, I> {
     #[inline]
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.index.partial_cmp(&other.index)
+        self.value.partial_cmp(&other.value)
     }
 }
 
 impl<T, I: GenIndex> PartialEq for NewTypeIndex<T, I> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
-        self.index.eq(&other.index)
+        self.value.eq(&other.value)
     }
 }
 
@@ -91,19 +79,29 @@ impl<T, I: GenIndex> GenIndex for NewTypeIndex<T, I> {
     #[inline]
     fn from_raw_parts(index: Self::Index, generation: Self::Generation) -> Self {
         Self {
-            index: I::from_raw_parts(index, generation),
+            value: I::from_raw_parts(index, generation),
             marker: PhantomData,
         }
     }
 
     #[inline]
     fn index(&self) -> Self::Index {
-        self.index.index()
+        self.value.index()
     }
 
     #[inline]
     fn generation(&self) -> Self::Generation {
-        self.index.generation()
+        self.value.generation()
+    }
+}
+
+impl<T, I: GenIndex> From<I> for NewTypeIndex<T, I> {
+    #[inline]
+    fn from(index: I) -> Self {
+        NewTypeIndex {
+            value: index,
+            marker: PhantomData,
+        }
     }
 }
 
@@ -121,18 +119,52 @@ impl<T, I: GenIndex> From<(I::Index, I::Generation)> for NewTypeIndex<T, I> {
     }
 }
 
-// endregion: TypedIndex
-
 #[cfg(test)]
 mod tests {
+    use crate::{GenIndex, Index, NewTypeIndex};
+
+    struct TestType;
+
+    #[test]
+    fn test_create() {
+        let index: NewTypeIndex<TestType> = NewTypeIndex::from_raw_parts(0, 0);
+        assert_eq!(index, NewTypeIndex::default());
+
+        let index: NewTypeIndex<TestType> = (2, 3).into();
+        assert_eq!((index.index(), index.generation()), index.into());
+    }
+
+    #[test]
+    fn test_cmp() {
+        assert!(
+            NewTypeIndex::<TestType>::from_raw_parts(1, 1) < NewTypeIndex::from_raw_parts(2, 1)
+        );
+        assert!(
+            NewTypeIndex::<TestType>::from_raw_parts(1, 3) < NewTypeIndex::from_raw_parts(2, 1)
+        );
+
+        assert_eq!(
+            NewTypeIndex::<TestType>::from_raw_parts(1, 3),
+            NewTypeIndex::from_raw_parts(1, 3)
+        );
+        assert_ne!(
+            NewTypeIndex::<TestType>::from_raw_parts(1, 3),
+            NewTypeIndex::from_raw_parts(1, 2)
+        );
+
+        assert!(
+            !(NewTypeIndex::<TestType>::from_raw_parts(1, 3) < NewTypeIndex::from_raw_parts(1, 4))
+        );
+        assert!(
+            !(NewTypeIndex::<TestType>::from_raw_parts(1, 4) < NewTypeIndex::from_raw_parts(1, 3))
+        );
+    }
+
     #[cfg(feature = "serde")]
     #[test]
     fn test_deserialize() {
-        use crate::{GenIndex, Index, NewTypeIndex};
         use alloc::vec;
         use serde_json::{json, Value};
-
-        struct TestType;
 
         let expected_index = NewTypeIndex::<TestType, Index>::from_raw_parts(123, 456);
         let json: Value = json!([123, 456]);
@@ -145,11 +177,8 @@ mod tests {
     #[cfg(feature = "serde")]
     #[test]
     fn test_serialize() {
-        use crate::{GenIndex, Index, NewTypeIndex};
         use alloc::vec;
         use serde_json::{json, Value};
-
-        struct TestType;
 
         let index = NewTypeIndex::<TestType, Index>::from_raw_parts(123, 456);
         let expected_json: Value = json!([123, 456]);
