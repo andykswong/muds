@@ -282,7 +282,7 @@ where
             .indices
             .iter_mut()
             .enumerate()
-            .filter(|(i, index)| index.index().try_into().is_ok_and(|index| *i == index))
+            .filter(|(i, index)| usize_eq(*i, index.index()))
         {
             let value = unsafe { get_value_unchecked_mut(&mut self.values, i) };
             if !f(index, unsafe { value.assume_init_mut() }) {
@@ -311,6 +311,11 @@ where
         self.free_list_tail = idx;
         self.free_list_size += 1;
     }
+}
+
+#[inline]
+fn usize_eq<I: TryInto<usize>>(lhs: usize, rhs: I) -> bool {
+    rhs.try_into().is_ok_and(|rhs| lhs == rhs)
 }
 
 #[inline]
@@ -344,14 +349,59 @@ unsafe fn get_value_unchecked_mut<T, const N: usize>(
     values.get_unchecked_mut(idx / N).get_unchecked_mut(idx % N)
 }
 
-mod imp {
-    use super::{iter, PagedSlotMap, INVALID_INDEX};
-    use crate::{Clear, Len, MapGet, MapInsert, MapMut, Push, Reserve, Retain};
+mod impl_core {
+    use super::{PagedSlotMap, INVALID_INDEX};
+    use alloc::{boxed::Box, vec::Vec};
     use core::{
-        mem::replace,
+        fmt,
+        hash::{Hash, Hasher},
+        mem::MaybeUninit,
         ops::{Index, IndexMut},
     };
     use genindex::GenIndex;
+
+    impl<T: Clone, I: GenIndex, const N: usize> Clone for PagedSlotMap<T, I, N>
+    where
+        I::Index: TryInto<usize>,
+    {
+        fn clone(&self) -> Self {
+            let mut values = Vec::new();
+            let mut page: Box<[MaybeUninit<T>; N]> = super::new_page();
+            for (i, index) in self.indices.iter().enumerate() {
+                if i > 0 && i % N == 0 {
+                    values.push(page);
+                    page = super::new_page();
+                }
+
+                if super::usize_eq(i, index.index()) {
+                    let value =
+                        unsafe { super::get_value_unchecked(&self.values, i).assume_init_ref() };
+                    unsafe { super::get_value_unchecked_mut(&mut values, i) }.write(value.clone());
+                }
+            }
+
+            if self.indices.len() > 0 {
+                values.push(page);
+            }
+
+            Self {
+                indices: self.indices.clone(),
+                values,
+                free_list_head: self.free_list_head.clone(),
+                free_list_tail: self.free_list_tail.clone(),
+                free_list_size: self.free_list_size.clone(),
+            }
+        }
+    }
+
+    impl<T: fmt::Debug, I: fmt::Debug + GenIndex, const N: usize> fmt::Debug for PagedSlotMap<T, I, N>
+    where
+        I::Index: TryInto<usize>,
+    {
+        fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+            fmt.debug_map().entries(self.iter()).finish()
+        }
+    }
 
     impl<T, I, const N: usize> Default for PagedSlotMap<T, I, N> {
         #[inline]
@@ -360,50 +410,9 @@ mod imp {
         }
     }
 
-    impl<T, I: GenIndex, const N: usize> Index<I> for PagedSlotMap<T, I, N>
-    where
-        I::Index: TryInto<usize>,
+    impl<T: PartialEq, I: GenIndex, const N: usize> Eq for PagedSlotMap<T, I, N> where
+        I::Index: TryInto<usize>
     {
-        type Output = T;
-
-        fn index(&self, index: I) -> &Self::Output {
-            let idx = index
-                .index()
-                .try_into()
-                .ok()
-                .filter(|idx| self.indices.get(&idx).is_some_and(|i| *i == index))
-                .expect(INVALID_INDEX);
-            unsafe { super::get_value_unchecked(&self.values, idx).assume_init_ref() }
-        }
-    }
-
-    impl<T, I: GenIndex, const N: usize> IndexMut<I> for PagedSlotMap<T, I, N>
-    where
-        I::Index: TryInto<usize>,
-    {
-        fn index_mut(&mut self, index: I) -> &mut Self::Output {
-            let idx = index
-                .index()
-                .try_into()
-                .ok()
-                .filter(|idx| self.indices.get(&idx).is_some_and(|i| *i == index))
-                .expect(INVALID_INDEX);
-            unsafe { super::get_value_unchecked_mut(&mut self.values, idx).assume_init_mut() }
-        }
-    }
-
-    impl<T, I: GenIndex, const N: usize> FromIterator<T> for PagedSlotMap<T, I, N>
-    where
-        I::Index: TryFrom<usize> + TryInto<usize>,
-    {
-        fn from_iter<It: IntoIterator<Item = T>>(iter: It) -> Self {
-            let iter = iter.into_iter();
-            let mut map = PagedSlotMap::new();
-            let (lower, upper) = iter.size_hint();
-            map.reserve(upper.unwrap_or(lower));
-            map.extend(iter);
-            map
-        }
     }
 
     impl<T, I: GenIndex, const N: usize> Extend<T> for PagedSlotMap<T, I, N>
@@ -429,52 +438,117 @@ mod imp {
         }
     }
 
-    impl<T, I: GenIndex, const N: usize> IntoIterator for PagedSlotMap<T, I, N>
+    impl<T, I: GenIndex, const M: usize, const N: usize> From<[T; M]> for PagedSlotMap<T, I, N>
+    where
+        I::Index: TryFrom<usize> + TryInto<usize>,
+    {
+        fn from(values: [T; M]) -> Self {
+            let mut map = PagedSlotMap::new();
+            map.reserve(M);
+            map.extend(values.into_iter());
+            map
+        }
+    }
+
+    impl<T, I: GenIndex, const N: usize> FromIterator<T> for PagedSlotMap<T, I, N>
+    where
+        I::Index: TryFrom<usize> + TryInto<usize>,
+    {
+        fn from_iter<It: IntoIterator<Item = T>>(iter: It) -> Self {
+            let iter = iter.into_iter();
+            let mut map = PagedSlotMap::new();
+            let (lower, upper) = iter.size_hint();
+            map.reserve(upper.unwrap_or(lower));
+            map.extend(iter);
+            map
+        }
+    }
+
+    impl<T: Hash, I: GenIndex + Hash, const N: usize> Hash for PagedSlotMap<T, I, N>
     where
         I::Index: TryInto<usize>,
     {
-        type Item = (I, T);
-
-        type IntoIter = iter::IntoIter<T, I, N>;
-
-        #[inline]
-        fn into_iter(self) -> Self::IntoIter {
-            iter::IntoIter {
-                start: 0,
-                end: self.len(),
-                index: (self.indices).into_iter(),
-                values: self.values,
+        fn hash<H: Hasher>(&self, state: &mut H) {
+            self.indices.hash(state);
+            for (i, index) in self.indices.iter().enumerate() {
+                let value = if super::usize_eq(i, index.index()) {
+                    Some(unsafe { super::get_value_unchecked(&self.values, i).assume_init_ref() })
+                } else {
+                    None
+                };
+                value.hash(state);
             }
+            self.free_list_head.hash(state);
+            self.free_list_tail.hash(state);
+            self.free_list_size.hash(state);
         }
     }
 
-    impl<'a, T: 'a, I: GenIndex + 'a, const N: usize> IntoIterator for &'a PagedSlotMap<T, I, N>
+    impl<T, I: GenIndex, const N: usize> Index<I> for PagedSlotMap<T, I, N>
     where
         I::Index: TryInto<usize>,
     {
-        type Item = (&'a I, &'a T);
+        type Output = T;
 
-        type IntoIter = iter::Iter<'a, T, I, N>;
-
-        #[inline]
-        fn into_iter(self) -> Self::IntoIter {
-            self.iter()
+        fn index(&self, index: I) -> &Self::Output {
+            let idx = index
+                .index()
+                .try_into()
+                .ok()
+                .filter(|idx| self.indices.get(*idx).is_some_and(|i| *i == index))
+                .expect(INVALID_INDEX);
+            unsafe { super::get_value_unchecked(&self.values, idx).assume_init_ref() }
         }
     }
 
-    impl<'a, T: 'a, I: GenIndex + 'a, const N: usize> IntoIterator for &'a mut PagedSlotMap<T, I, N>
+    impl<T, I: GenIndex, const N: usize> IndexMut<I> for PagedSlotMap<T, I, N>
     where
         I::Index: TryInto<usize>,
     {
-        type Item = (&'a I, &'a mut T);
-
-        type IntoIter = iter::IterMut<'a, T, I, N>;
-
-        #[inline]
-        fn into_iter(self) -> Self::IntoIter {
-            self.iter_mut()
+        fn index_mut(&mut self, index: I) -> &mut Self::Output {
+            let idx = index
+                .index()
+                .try_into()
+                .ok()
+                .filter(|idx| self.indices.get(*idx).is_some_and(|i| *i == index))
+                .expect(INVALID_INDEX);
+            unsafe { super::get_value_unchecked_mut(&mut self.values, idx).assume_init_mut() }
         }
     }
+
+    impl<T: PartialEq, I: GenIndex, const N: usize> PartialEq for PagedSlotMap<T, I, N>
+    where
+        I::Index: TryInto<usize>,
+    {
+        fn eq(&self, other: &Self) -> bool {
+            if !(self.indices == other.indices
+                && self.free_list_head == other.free_list_head
+                && self.free_list_tail == other.free_list_tail
+                && self.free_list_size == other.free_list_size)
+            {
+                return false;
+            }
+            for (i, index) in self.indices.iter().enumerate() {
+                if super::usize_eq(i, index.index()) {
+                    let lhs =
+                        unsafe { super::get_value_unchecked(&self.values, i).assume_init_ref() };
+                    let rhs =
+                        unsafe { super::get_value_unchecked(&other.values, i).assume_init_ref() };
+                    if !lhs.eq(rhs) {
+                        return false;
+                    }
+                }
+            }
+            true
+        }
+    }
+}
+
+mod impl_collections {
+    use super::PagedSlotMap;
+    use crate::{Clear, Len, MapGet, MapInsert, MapMut, Push, Reserve, Retain};
+    use core::mem::replace;
+    use genindex::GenIndex;
 
     impl<T, I, const N: usize> Clear for PagedSlotMap<T, I, N> {
         #[inline]
@@ -567,9 +641,57 @@ mod imp {
 }
 
 mod iter {
+    use super::PagedSlotMap;
     use alloc::{boxed::Box, vec::Vec};
     use core::{iter::FusedIterator, mem::MaybeUninit};
     use genindex::GenIndex;
+
+    impl<T, I: GenIndex, const N: usize> IntoIterator for PagedSlotMap<T, I, N>
+    where
+        I::Index: TryInto<usize>,
+    {
+        type Item = (I, T);
+
+        type IntoIter = IntoIter<T, I, N>;
+
+        #[inline]
+        fn into_iter(self) -> Self::IntoIter {
+            IntoIter {
+                start: 0,
+                end: self.len(),
+                index: (self.indices).into_iter(),
+                values: self.values,
+            }
+        }
+    }
+
+    impl<'a, T: 'a, I: GenIndex + 'a, const N: usize> IntoIterator for &'a PagedSlotMap<T, I, N>
+    where
+        I::Index: TryInto<usize>,
+    {
+        type Item = (&'a I, &'a T);
+
+        type IntoIter = Iter<'a, T, I, N>;
+
+        #[inline]
+        fn into_iter(self) -> Self::IntoIter {
+            self.iter()
+        }
+    }
+
+    impl<'a, T: 'a, I: GenIndex + 'a, const N: usize> IntoIterator for &'a mut PagedSlotMap<T, I, N>
+    where
+        I::Index: TryInto<usize>,
+    {
+        type Item = (&'a I, &'a mut T);
+
+        type IntoIter = IterMut<'a, T, I, N>;
+
+        #[inline]
+        fn into_iter(self) -> Self::IntoIter {
+            self.iter_mut()
+        }
+    }
 
     /// An into iterator over a [super::PagedSlotMap].
     #[derive(Debug)]
@@ -590,7 +712,7 @@ mod iter {
             if let Some(index) = self.index.next() {
                 let idx = self.start;
                 self.start += 1;
-                if index.index().try_into().is_ok_and(|i| i == idx) {
+                if super::usize_eq(idx, index.index()) {
                     Some((index, unsafe {
                         super::get_value_unchecked(&self.values, idx).assume_init_read()
                     }))
@@ -617,7 +739,7 @@ mod iter {
             if let Some(index) = self.index.next_back() {
                 self.end -= 1;
                 let idx = self.end;
-                if index.index().try_into().is_ok_and(|i| i == idx) {
+                if super::usize_eq(idx, index.index()) {
                     Some((index, unsafe {
                         super::get_value_unchecked(&self.values, idx).assume_init_read()
                     }))
@@ -664,7 +786,7 @@ mod iter {
             if let Some(index) = self.index.next() {
                 let idx = self.start;
                 self.start += 1;
-                if index.index().try_into().is_ok_and(|i| i == idx) {
+                if super::usize_eq(idx, index.index()) {
                     Some((index, unsafe {
                         super::get_value_unchecked(&self.values, idx).assume_init_ref()
                     }))
@@ -691,7 +813,7 @@ mod iter {
             if let Some(index) = self.index.next_back() {
                 self.end -= 1;
                 let idx = self.end;
-                if index.index().try_into().is_ok_and(|i| i == idx) {
+                if super::usize_eq(idx, index.index()) {
                     Some((index, unsafe {
                         super::get_value_unchecked(&self.values, idx).assume_init_ref()
                     }))
@@ -738,7 +860,7 @@ mod iter {
             if let Some(index) = self.index.next() {
                 let idx = self.start;
                 self.start += 1;
-                if index.index().try_into().is_ok_and(|i| i == idx) {
+                if super::usize_eq(idx, index.index()) {
                     Some((index, unsafe {
                         &mut *super::get_value_unchecked_mut(&mut self.values, idx).as_mut_ptr()
                     }))
@@ -765,7 +887,7 @@ mod iter {
             if let Some(index) = self.index.next_back() {
                 self.end -= 1;
                 let idx = self.end;
-                if index.index().try_into().is_ok_and(|i| i == idx) {
+                if super::usize_eq(idx, index.index()) {
                     Some((index, unsafe {
                         &mut *super::get_value_unchecked_mut(&mut self.values, idx).as_mut_ptr()
                     }))
@@ -814,7 +936,7 @@ mod serde_impl {
                 .iter()
                 .enumerate()
                 .map(|(idx, index)| {
-                    if index.index().try_into().is_ok_and(|i| i == idx) {
+                    if super::usize_eq(idx, index.index()) {
                         Some(unsafe {
                             super::get_value_unchecked(&self.values, idx).assume_init_ref()
                         })
@@ -855,6 +977,11 @@ mod serde_impl {
                     .map_err(|_| D::Error::custom(super::INVALID_INDEX))?;
                 let offset = idx % N;
 
+                if idx > 0 && offset == 0 {
+                    values.push(page);
+                    page = super::new_page();
+                }
+
                 if let Some(v) = value.filter(|_| i == idx) {
                     page[offset].write(v);
                 } else {
@@ -873,11 +1000,10 @@ mod serde_impl {
                     }
                     free_list_size += 1;
                 }
+            }
 
-                if offset == N - 1 {
-                    values.push(page);
-                    page = super::new_page();
-                }
+            if indices.len() > 0 {
+                values.push(page);
             }
 
             Ok(PagedSlotMap {
