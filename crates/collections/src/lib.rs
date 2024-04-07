@@ -1,7 +1,6 @@
 //! Common collection interfaces and implementations.
 
 #![no_std]
-#![cfg_attr(feature = "nightly", feature(allocator_api))]
 
 extern crate alloc;
 
@@ -18,3 +17,4 @@ pub use collection::*;
 pub use cons::*;
 pub use join::*;
 pub use map::*;
+pub use maps::*;

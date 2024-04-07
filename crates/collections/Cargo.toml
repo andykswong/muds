@@ -16,12 +16,9 @@ keywords = ["collections", "muds"]
 package = "muds:collections"
 
 [package.metadata.docs.rs]
-features = ["nightly", "serde", "std"]
+features = ["serde", "std"]
 
 [dependencies]
-allocator-api2 = { version = "0.2", default-features = false, features = [
-    "alloc",
-] }
 genindex = { path = "../genindex", version = "0.2", default-features = false }
 serde = { version = "1.0", optional = true, default-features = false, features = [
     "derive",
@@ -32,6 +29,5 @@ serde_json = "1.0"
 
 [features]
 default = ["std"]
-nightly = ["allocator-api2/nightly"]
 serde = ["dep:serde", "genindex/serde"]
-std = ["allocator-api2/std"]
+std = []

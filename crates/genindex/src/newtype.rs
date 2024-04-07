@@ -121,7 +121,7 @@ impl<T, I: GenIndex> From<(I::Index, I::Generation)> for NewTypeIndex<T, I> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{GenIndex, IndexPair, NewTypeIndex};
+    use crate::{GenIndex, NewTypeIndex};
 
     struct TestType;
 
@@ -163,6 +163,7 @@ mod tests {
     #[cfg(feature = "serde")]
     #[test]
     fn test_deserialize() {
+        use crate::IndexPair;
         use alloc::vec;
         use serde_json::{json, Value};
 
@@ -177,6 +178,7 @@ mod tests {
     #[cfg(feature = "serde")]
     #[test]
     fn test_serialize() {
+        use crate::IndexPair;
         use alloc::vec;
         use serde_json::{json, Value};
 

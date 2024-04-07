@@ -1,6 +1,6 @@
-use crate::{Clear, Len, MapGet, MapInsert, MapMut, Pop, Push, Retain};
+use crate::{Clear, Len, MapGet, MapInsert, MapMut, Pop, Push, Reserve, Retain};
 use alloc::vec::Vec;
-use core::mem::{replace, take};
+use core::mem::replace;
 
 impl<T> Len for Vec<T> {
     #[inline]
@@ -47,11 +47,7 @@ impl<T> MapGet<usize> for Vec<T> {
 
     #[inline]
     fn get(&self, key: &usize) -> Option<&Self::Value> {
-        if self.contains_key(key) {
-            Some(&self[*key])
-        } else {
-            None
-        }
+        self.as_slice().get(*key)
     }
 
     #[inline]
@@ -60,21 +56,17 @@ impl<T> MapGet<usize> for Vec<T> {
     }
 }
 
-impl<T: Default> MapMut<usize> for Vec<T> {
+impl<T> MapMut<usize> for Vec<T> {
     #[inline]
     fn get_mut(&mut self, key: &usize) -> Option<&mut Self::Value> {
-        if self.contains_key(key) {
-            Some(&mut self[*key])
-        } else {
-            None
-        }
+        self.as_mut_slice().get_mut(*key)
     }
 
-    /// Removes and returns the element at given index, replacing it with default value.
+    /// Removes and returns the element at given index, shifting all elements after it to the left.
     #[inline]
     fn remove(&mut self, key: &usize) -> Option<Self::Value> {
         if self.contains_key(key) {
-            Some(take(&mut self[*key]))
+            Some(self.remove(*key))
         } else {
             None
         }
@@ -96,6 +88,13 @@ impl<T: Default> MapInsert for Vec<T> {
             self.push(value);
             None
         }
+    }
+}
+
+impl<T> Reserve for Vec<T> {
+    #[inline]
+    fn reserve(&mut self, additional: usize) {
+        self.reserve(additional);
     }
 }
 

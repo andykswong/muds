@@ -6,7 +6,7 @@ use num::{Bounded, Unsigned, Zero};
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(C)]
-pub struct IndexPair<I = usize, G = usize>(I, G);
+pub struct IndexPair<I = u32, G = u32>(I, G);
 
 impl<I: Copy + PartialOrd + Unsigned, G: Bounded + Copy + PartialOrd + Unsigned> GenIndex
     for IndexPair<I, G>
