@@ -376,7 +376,7 @@ mod core_impl {
                 if super::usize_eq(i, index.index()) {
                     let value =
                         unsafe { super::get_value_unchecked(&self.values, i).assume_init_ref() };
-                    unsafe { super::get_value_unchecked_mut(&mut values, i) }.write(value.clone());
+                    unsafe { page.get_unchecked_mut(i % N) }.write(value.clone());
                 }
             }
 
@@ -438,23 +438,25 @@ mod core_impl {
         }
     }
 
-    impl<T, I: GenIndex, const M: usize, const N: usize> From<[T; M]> for PagedSlotMap<T, I, N>
-    where
-        I::Index: TryFrom<usize> + TryInto<usize>,
-    {
-        fn from(values: [T; M]) -> Self {
-            let mut map = PagedSlotMap::new();
-            map.reserve(M);
-            map.extend(values.into_iter());
-            map
-        }
-    }
-
     impl<T, I: GenIndex, const N: usize> FromIterator<T> for PagedSlotMap<T, I, N>
     where
         I::Index: TryFrom<usize> + TryInto<usize>,
     {
         fn from_iter<It: IntoIterator<Item = T>>(iter: It) -> Self {
+            let iter = iter.into_iter();
+            let mut map = PagedSlotMap::new();
+            let (lower, upper) = iter.size_hint();
+            map.reserve(upper.unwrap_or(lower));
+            map.extend(iter);
+            map
+        }
+    }
+
+    impl<'a, T: Clone, I: GenIndex, const N: usize> FromIterator<&'a T> for PagedSlotMap<T, I, N>
+    where
+        I::Index: TryFrom<usize> + TryInto<usize>,
+    {
+        fn from_iter<It: IntoIterator<Item = &'a T>>(iter: It) -> Self {
             let iter = iter.into_iter();
             let mut map = PagedSlotMap::new();
             let (lower, upper) = iter.size_hint();
@@ -546,7 +548,7 @@ mod core_impl {
 
 mod collections_impl {
     use super::PagedSlotMap;
-    use crate::{Clear, Len, MapGet, MapInsert, MapMut, Push, Reserve, Retain};
+    use crate::{Clear, Len, MapGet, MapInsert, MapMut, Push, Retain};
     use core::mem::replace;
     use genindex::GenIndex;
 
@@ -561,13 +563,6 @@ mod collections_impl {
         #[inline]
         fn len(&self) -> usize {
             self.len()
-        }
-    }
-
-    impl<T, I, const N: usize> Reserve for PagedSlotMap<T, I, N> {
-        #[inline]
-        fn reserve(&mut self, additional: usize) {
-            self.reserve(additional);
         }
     }
 
@@ -1019,10 +1014,212 @@ mod serde_impl {
 
 #[cfg(test)]
 mod tests {
+    use super::PagedSlotMap;
+    use crate::{Clear, Len, MapGet, MapInsert, MapMut, Push, Retain};
+    use alloc::format;
+    use core::hash::{Hash, Hasher};
+    use genindex::{GenIndex, IndexPair};
+    use std::hash::DefaultHasher;
+
+    fn create_map() -> PagedSlotMap<u32> {
+        let mut map = PagedSlotMap::new();
+        for i in 0..10 {
+            let index: IndexPair = Push::push(&mut map, i);
+            assert_eq!(index.index(), i);
+        }
+        map
+    }
+
+    #[test]
+    fn test_default() {
+        let map = PagedSlotMap::<u32>::default();
+        assert_eq!(map.len(), 0);
+        assert_eq!(map.capacity(), 0);
+    }
+
+    #[test]
+    fn test_clone_eq() {
+        let map = create_map();
+        let map2 = map.clone();
+        assert!(map == map2);
+    }
+
+    #[test]
+    fn test_debug() {
+        let mut map = PagedSlotMap::<i32>::new();
+        let idx1 = map.push(0);
+        let idx2 = map.push(1);
+        assert_eq!(format!("{map:?}"), format!("{{{idx1:?}: 0, {idx2:?}: 1}}"));
+    }
+
+    #[test]
+    fn test_from_iter() {
+        let map = create_map();
+
+        let map2 = PagedSlotMap::from_iter(map.iter().map(|(_, v)| v));
+        assert!(map == map2);
+
+        let map2 = PagedSlotMap::from_iter(map.clone().into_iter().map(|(_, v)| v));
+        assert!(map == map2);
+    }
+
+    #[test]
+    fn test_hash() {
+        let map = create_map();
+        let map2 = map.clone();
+        let mut s = DefaultHasher::new();
+        map.hash(&mut s);
+        let hash1 = s.finish();
+        let mut s = DefaultHasher::new();
+        map2.hash(&mut s);
+        let hash2 = s.finish();
+        assert_eq!(hash1, hash2);
+    }
+
+    #[test]
+    fn test_clear_len() {
+        let mut map = create_map();
+        assert_eq!(Len::len(&map), 10);
+        Clear::clear(&mut map);
+        assert!(Len::is_empty(&map));
+    }
+
+    #[test]
+    fn test_map_get() {
+        let map = create_map();
+        let (&first, &value) = map.iter().next().unwrap();
+        assert!(MapGet::contains_key(&map, &first));
+        assert_eq!(MapGet::get(&map, &first), Some(&value));
+        assert_eq!(MapGet::get(&map, &IndexPair::from_index(123)), None);
+    }
+
+    #[test]
+    fn test_map_mut() {
+        let mut map = create_map();
+        let first = *map.iter().next().unwrap().0;
+
+        let new_value = 1234;
+        map[first] = new_value;
+        assert_eq!(map[first], new_value);
+
+        let new_value = 123;
+        *MapMut::get_mut(&mut map, &first).unwrap() = new_value;
+        assert_eq!(MapGet::get(&map, &first), Some(&new_value));
+
+        assert_eq!(MapMut::remove(&mut map, &first), Some(new_value));
+        assert_eq!(MapGet::get(&map, &first), None);
+    }
+
+    #[test]
+    fn test_map_insert() {
+        let mut map = create_map();
+        let (&first, &value) = map.iter().next().unwrap();
+
+        let new_value = 123;
+        assert_eq!(MapInsert::insert(&mut map, first, new_value), Some(value));
+        assert_eq!(MapGet::get(&map, &first), Some(&new_value));
+
+        let unknown_idx = IndexPair::from_index(123);
+        assert_eq!(MapInsert::insert(&mut map, unknown_idx, new_value), None);
+        assert_eq!(MapGet::get(&map, &unknown_idx), None);
+    }
+
+    #[test]
+    fn test_retain() {
+        let mut map = create_map();
+        let mut iter = map.iter();
+        iter.next();
+        let idx1 = *iter.next().unwrap().0;
+
+        Retain::retain(&mut map, |_, val| {
+            if *val == 1 {
+                *val = 3;
+                true
+            } else {
+                false
+            }
+        });
+        assert_eq!(map.len(), 1);
+        assert_eq!(map.get(&idx1), Some(&3));
+    }
+
+    #[test]
+    fn test_iter() {
+        let map = create_map();
+        let mut i = 0;
+        for (idx, value) in &map {
+            assert_eq!(idx.index(), *value);
+            assert_eq!(i, *value);
+            i += 1;
+        }
+        assert_eq!(i, 10);
+    }
+
+    #[test]
+    fn test_iter_rev() {
+        let map = create_map();
+        let mut i = 10;
+        for (idx, value) in (&map).into_iter().rev() {
+            i -= 1;
+            assert_eq!(idx.index(), *value);
+            assert_eq!(i, *value);
+        }
+        assert_eq!(i, 0);
+    }
+
+    #[test]
+    fn test_iter_mut() {
+        let mut map = create_map();
+        let mut i = 0;
+        for (idx, value) in &mut map {
+            *value += 1;
+            assert_eq!(i, idx.index());
+            assert_eq!(i + 1, *value);
+            i += 1;
+        }
+        assert_eq!(i, 10);
+    }
+
+    #[test]
+    fn test_iter_mut_rev() {
+        let mut map = create_map();
+        let mut i = 10;
+        for (idx, value) in (&mut map).into_iter().rev() {
+            i -= 1;
+            *value += 1;
+            assert_eq!(i, idx.index());
+            assert_eq!(i + 1, *value);
+        }
+        assert_eq!(i, 0);
+    }
+
+    #[test]
+    fn test_into_iter() {
+        let map = create_map();
+        let mut i = 0;
+        for (idx, value) in map {
+            assert_eq!(idx.index(), value);
+            assert_eq!(i, value);
+            i += 1;
+        }
+        assert_eq!(i, 10);
+    }
+
+    #[test]
+    fn test_into_iter_rev() {
+        let map = create_map();
+        let mut i = 10;
+        for (idx, value) in map.into_iter().rev() {
+            i -= 1;
+            assert_eq!(idx.index(), value);
+            assert_eq!(i, value);
+        }
+        assert_eq!(i, 0);
+    }
+
     #[cfg(feature = "serde")]
     #[test]
     fn test_serialize() {
-        use super::PagedSlotMap;
         use alloc::vec;
         use serde_json::{json, Value};
 
@@ -1043,10 +1240,7 @@ mod tests {
     #[cfg(feature = "serde")]
     #[test]
     fn test_deserialize() {
-        use super::PagedSlotMap;
-        use alloc::string::String;
-        use alloc::vec;
-        use genindex::GenIndex;
+        use alloc::{string::String, vec};
         use serde_json::{json, Value};
 
         let json: Value = json!([[[0, 2], [1, 3], [5, 3], [3, 4]], ["d", "b", null, "c"]]);

@@ -74,3 +74,74 @@ impl<K, V, S> Retain for HashMap<K, V, S> {
         self.retain(f);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{Clear, Len, MapGet, MapInsert, MapMut, Retain};
+    use alloc::{format, string::String};
+    use std::collections::HashMap;
+
+    fn create_map() -> HashMap<String, u32> {
+        let mut map = HashMap::new();
+        for i in 0..10 {
+            map.insert(format!("{i}"), i);
+        }
+        map
+    }
+
+    #[test]
+    fn test_clear_len() {
+        let mut map = create_map();
+        assert_eq!(Len::len(&map), 10);
+        Clear::clear(&mut map);
+        assert!(Len::is_empty(&map));
+    }
+
+    #[test]
+    fn test_map_get() {
+        let map = create_map();
+        assert!(MapGet::contains_key(&map, "0"));
+        assert_eq!(MapGet::get(&map, "1"), Some(&1));
+        assert_eq!(MapGet::get(&map, "11"), None);
+    }
+
+    #[test]
+    fn test_map_mut() {
+        let mut map = create_map();
+
+        let new_value = 123;
+        *MapMut::get_mut(&mut map, "1").unwrap() = new_value;
+        assert_eq!(map["1"], new_value);
+
+        assert_eq!(MapMut::remove(&mut map, "1"), Some(new_value));
+        assert_eq!(MapGet::get(&map, "1"), None);
+    }
+
+    #[test]
+    fn test_map_insert() {
+        let mut map = create_map();
+
+        let new_value = 123;
+        assert_eq!(MapInsert::insert(&mut map, "1".into(), new_value), Some(1));
+        assert_eq!(map["1"], new_value);
+
+        assert_eq!(MapInsert::insert(&mut map, "999".into(), new_value), None);
+        assert_eq!(map["999"], new_value);
+    }
+
+    #[test]
+    fn test_retain() {
+        let mut map = create_map();
+
+        Retain::retain(&mut map, |_, val| {
+            if *val == 1 {
+                *val = 3;
+                true
+            } else {
+                false
+            }
+        });
+        assert_eq!(map.len(), 1);
+        assert_eq!(map["1"], 3);
+    }
+}

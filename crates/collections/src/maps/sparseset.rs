@@ -419,18 +419,6 @@ mod core_impl {
         }
     }
 
-    impl<T, I: GenIndex, const N: usize> From<[(I, T); N]> for SparseSet<T, I>
-    where
-        I::Index: TryInto<usize>,
-    {
-        fn from(values: [(I, T); N]) -> Self {
-            let mut set = SparseSet::new();
-            set.reserve(N);
-            set.extend(values.into_iter());
-            set
-        }
-    }
-
     impl<T, I: GenIndex> FromIterator<(I, T)> for SparseSet<T, I>
     where
         I::Index: TryInto<usize>,
@@ -494,8 +482,7 @@ mod core_impl {
 
 mod collections_impl {
     use super::SparseSet;
-    use crate::{Clear, Len, MapGet, MapInsert, MapMut, Reserve, Retain};
-    use core::mem::replace;
+    use crate::{Clear, Len, MapGet, MapInsert, MapMut, Retain};
     use genindex::GenIndex;
 
     impl<T, I> Clear for SparseSet<T, I> {
@@ -509,13 +496,6 @@ mod collections_impl {
         #[inline]
         fn len(&self) -> usize {
             self.len()
-        }
-    }
-
-    impl<T, I> Reserve for SparseSet<T, I> {
-        #[inline]
-        fn reserve(&mut self, additional: usize) {
-            self.reserve(additional);
         }
     }
 
@@ -556,8 +536,7 @@ mod collections_impl {
 
         #[inline]
         fn insert(&mut self, key: Self::Key, value: Self::Value) -> Option<Self::Value> {
-            let dest = self.get_mut(&key)?;
-            Some(replace(dest, value))
+            self.insert(key, value)
         }
     }
 
@@ -626,12 +605,160 @@ mod serde_impl {
 
 #[cfg(test)]
 mod tests {
+    use super::SparseSet;
+    use crate::{Clear, Len, MapGet, MapInsert, MapMut, Retain};
+    use alloc::vec::Vec;
+    use core::hash::{Hash, Hasher};
+    use genindex::{GenIndex, IndexU64};
+    use std::hash::DefaultHasher;
+
+    fn create_map() -> SparseSet<u32, IndexU64> {
+        let mut map = SparseSet::new();
+        for i in 0..10 {
+            map.insert(IndexU64::from_index(i), i);
+        }
+        map
+    }
+
+    #[test]
+    fn test_eq() {
+        let map = create_map();
+        let map2 = map.clone();
+        assert!(map == map2);
+    }
+
+    #[test]
+    fn test_from_iter() {
+        let map = create_map();
+
+        let map2 = SparseSet::from_iter(map.iter());
+        assert!(map == map2);
+
+        let map2 = SparseSet::from_iter(map.clone().into_iter());
+        assert!(map == map2);
+    }
+
+    #[test]
+    fn test_hash() {
+        let map = create_map();
+        let vec: Vec<(IndexU64, u32)> = map.clone().into_iter().collect();
+        let mut s = DefaultHasher::new();
+        map.hash(&mut s);
+        let hash1 = s.finish();
+        let mut s = DefaultHasher::new();
+        vec.hash(&mut s);
+        let hash2 = s.finish();
+        assert_eq!(hash1, hash2);
+    }
+
+    #[test]
+    fn test_clear_len() {
+        let mut map = create_map();
+        assert_eq!(Len::len(&map), 10);
+        Clear::clear(&mut map);
+        assert!(Len::is_empty(&map));
+    }
+
+    #[test]
+    fn test_map_get() {
+        let map = create_map();
+        let (&first, &value) = map.iter().next().unwrap();
+        assert!(MapGet::contains_key(&map, &first));
+        assert_eq!(MapGet::get(&map, &first), Some(&value));
+        assert_eq!(MapGet::get(&map, &IndexU64::from_index(123)), None);
+    }
+
+    #[test]
+    fn test_map_mut() {
+        let mut map = create_map();
+        let first = *map.iter().next().unwrap().0;
+
+        let new_value = 1234;
+        map[first] = new_value;
+        assert_eq!(map[first], new_value);
+
+        let new_value = 123;
+        *MapMut::get_mut(&mut map, &first).unwrap() = new_value;
+        assert_eq!(MapGet::get(&map, &first), Some(&new_value));
+
+        assert_eq!(MapMut::remove(&mut map, &first), Some(new_value));
+        assert_eq!(MapGet::get(&map, &first), None);
+    }
+
+    #[test]
+    fn test_map_insert() {
+        let mut map = create_map();
+        let (&first, &value) = map.iter().next().unwrap();
+
+        let new_value = 123;
+        assert_eq!(MapInsert::insert(&mut map, first, new_value), Some(value));
+        assert_eq!(MapGet::get(&map, &first), Some(&new_value));
+
+        let unknown_idx = IndexU64::from_index(123);
+        assert_eq!(MapInsert::insert(&mut map, unknown_idx, new_value), None);
+        assert_eq!(MapGet::get(&map, &unknown_idx), Some(&new_value));
+    }
+
+    #[test]
+    fn test_retain() {
+        let mut map = create_map();
+        let mut iter = map.iter();
+        iter.next();
+        let idx1 = *iter.next().unwrap().0;
+
+        Retain::retain(&mut map, |_, val| {
+            if *val == 1 {
+                *val = 3;
+                true
+            } else {
+                false
+            }
+        });
+        assert_eq!(map.len(), 1);
+        assert_eq!(map.get(&idx1), Some(&3));
+    }
+
+    #[test]
+    fn test_iter() {
+        let map = create_map();
+        let mut i = 0;
+        for (idx, value) in &map {
+            assert_eq!(idx.index(), *value);
+            assert_eq!(i, *value);
+            i += 1;
+        }
+        assert_eq!(i, 10);
+    }
+
+    #[test]
+    fn test_iter_mut() {
+        let mut map = create_map();
+        let mut i = 0;
+        for (idx, value) in &mut map {
+            *value += 1;
+            assert_eq!(i, idx.index());
+            assert_eq!(i + 1, *value);
+            i += 1;
+        }
+        assert_eq!(i, 10);
+    }
+
+    #[test]
+    fn test_into_iter() {
+        let map = create_map();
+        let mut i = 0;
+        for (idx, value) in map {
+            assert_eq!(idx.index(), value);
+            assert_eq!(i, value);
+            i += 1;
+        }
+        assert_eq!(i, 10);
+    }
+
     #[cfg(feature = "serde")]
     #[test]
     fn test_serialize() {
-        use super::SparseSet;
         use alloc::vec;
-        use genindex::IndexU64;
         use serde_json::{json, Value};
 
         let mut set = SparseSet::<&str, IndexU64>::new();
@@ -649,9 +776,7 @@ mod tests {
     #[cfg(feature = "serde")]
     #[test]
     fn test_deserialize() {
-        use super::SparseSet;
         use alloc::{string::String, vec};
-        use genindex::IndexU64;
         use serde_json::{json, Value};
 
         let json: Value = json!([[1, "a"], [3, "c"]]);

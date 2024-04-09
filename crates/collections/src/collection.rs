@@ -18,12 +18,6 @@ pub trait Clear {
     fn clear(&mut self);
 }
 
-/// Operation to reserve capacity for collection.
-pub trait Reserve {
-    /// Reserves capacity for at least `additional` more elements to be inserted in the given collection.
-    fn reserve(&mut self, additional: usize);
-}
-
 /// Operation to decide which collection elements to retain.
 pub trait Retain {
     /// Key type

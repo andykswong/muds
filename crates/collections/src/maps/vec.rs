@@ -1,4 +1,4 @@
-use crate::{Clear, Len, MapGet, MapInsert, MapMut, Pop, Push, Reserve, Retain};
+use crate::{Clear, Len, MapGet, MapInsert, MapMut, Pop, Push, Retain};
 use alloc::vec::Vec;
 use core::mem::replace;
 
@@ -77,24 +77,14 @@ impl<T: Default> MapInsert for Vec<T> {
     type Key = usize;
     type Value = T;
 
-    /// Inserts or replaces an element at given index.
+    /// Replaces an element at given index.
     #[inline]
     fn insert(&mut self, key: Self::Key, value: Self::Value) -> Option<Self::Value> {
         if self.len() > key {
             Some(replace(&mut self[key], value))
         } else {
-            self.reserve(key + 1 - self.len());
-            self.resize_with(key, Default::default);
-            self.push(value);
             None
         }
-    }
-}
-
-impl<T> Reserve for Vec<T> {
-    #[inline]
-    fn reserve(&mut self, additional: usize) {
-        self.reserve(additional);
     }
 }
 
@@ -110,5 +100,66 @@ impl<T> Retain for Vec<T> {
             i += 1;
             result
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{Clear, Len, MapGet, MapInsert, MapMut, Retain};
+    use alloc::vec;
+
+    #[test]
+    fn test_clear_len() {
+        let mut vec = vec![0, 1, 2];
+        assert_eq!(Len::len(&vec), 3);
+        Clear::clear(&mut vec);
+        assert!(Len::is_empty(&vec));
+    }
+
+    #[test]
+    fn test_map_get() {
+        let vec = vec![0, 1, 2];
+        assert!(MapGet::contains_key(&vec, &0));
+        assert_eq!(MapGet::get(&vec, &1), Some(&1));
+        assert_eq!(MapGet::get(&vec, &3), None);
+    }
+
+    #[test]
+    fn test_map_mut() {
+        let mut vec = vec![0, 1, 2];
+
+        let new_value = 123;
+        *MapMut::get_mut(&mut vec, &1).unwrap() = new_value;
+        assert_eq!(vec, vec![0, new_value, 2]);
+
+        assert_eq!(MapMut::remove(&mut vec, &1), Some(new_value));
+        assert_eq!(vec, vec![0, 2]);
+    }
+
+    #[test]
+    fn test_map_insert() {
+        let mut vec = vec![0, 1, 2];
+
+        let new_value = 123;
+        assert_eq!(MapInsert::insert(&mut vec, 1, new_value), Some(1));
+        assert_eq!(vec, vec![0, new_value, 2]);
+
+        assert_eq!(MapInsert::insert(&mut vec, 999, new_value), None);
+        assert_eq!(vec, vec![0, new_value, 2]);
+    }
+
+    #[test]
+    fn test_retain() {
+        let mut vec = vec![0, 1, 2];
+
+        Retain::retain(&mut vec, |_, val| {
+            if *val == 1 {
+                *val = 3;
+                true
+            } else {
+                false
+            }
+        });
+        assert_eq!(vec, vec![3]);
     }
 }
