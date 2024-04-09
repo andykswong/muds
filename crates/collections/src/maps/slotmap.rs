@@ -349,7 +349,7 @@ unsafe fn get_value_unchecked_mut<T, const N: usize>(
     values.get_unchecked_mut(idx / N).get_unchecked_mut(idx % N)
 }
 
-mod impl_core {
+mod core_impl {
     use super::{PagedSlotMap, INVALID_INDEX};
     use alloc::{boxed::Box, vec::Vec};
     use core::{
@@ -544,7 +544,7 @@ mod impl_core {
     }
 }
 
-mod impl_collections {
+mod collections_impl {
     use super::PagedSlotMap;
     use crate::{Clear, Len, MapGet, MapInsert, MapMut, Push, Reserve, Retain};
     use core::mem::replace;
@@ -1014,5 +1014,49 @@ mod serde_impl {
                 free_list_size,
             })
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_serialize() {
+        use super::PagedSlotMap;
+        use alloc::vec;
+        use serde_json::{json, Value};
+
+        let mut map = PagedSlotMap::<&str>::new();
+        let idx1 = map.push("a");
+        map.push("b");
+        map.push("c");
+        map.remove(&idx1);
+        map.push("d");
+
+        let expected_json: Value = json!([[[0, 2], [1, 1], [2, 1]], ["d", "b", "c"]]);
+
+        let json: Value = serde_json::to_value(map).unwrap();
+
+        assert_eq!(json, expected_json);
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_deserialize() {
+        use super::PagedSlotMap;
+        use alloc::string::String;
+        use alloc::vec;
+        use genindex::GenIndex;
+        use serde_json::{json, Value};
+
+        let json: Value = json!([[[0, 2], [1, 3], [5, 3], [3, 4]], ["d", "b", null, "c"]]);
+
+        let map: PagedSlotMap<String> = serde_json::from_value(json).unwrap();
+
+        assert_eq!(map.len(), 3);
+        assert_eq!(map[GenIndex::from_raw_parts(1, 3)], "b");
+        assert_eq!(map[GenIndex::from_raw_parts(3, 4)], "c");
+        assert_eq!(map[GenIndex::from_raw_parts(0, 2)], "d");
+        assert_eq!(map.get(&GenIndex::from_raw_parts(2, 3)), None);
     }
 }
