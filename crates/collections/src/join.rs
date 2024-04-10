@@ -1,7 +1,7 @@
 //! Helper traits for joining with `Map`s.
 
 use super::{MapGet, MapMut};
-use core::iter::FusedIterator;
+use core::{borrow::Borrow, iter::FusedIterator};
 
 /// Iterator trait for joining with [Map]s.
 pub trait MapJoin<'a, K: 'a, V>: Iterator<Item = (&'a K, V)> + Sized {
@@ -17,6 +17,7 @@ pub trait MapJoin<'a, K: 'a, V>: Iterator<Item = (&'a K, V)> + Sized {
     fn map_join<M>(self, rhs: &'a M) -> MapJoinIter<Self, &'a M>
     where
         M: MapGet<K>,
+        M::Key: Borrow<K>,
     {
         MapJoinIter {
             iter: self,
@@ -29,6 +30,7 @@ pub trait MapJoin<'a, K: 'a, V>: Iterator<Item = (&'a K, V)> + Sized {
     fn map_join_left<M>(self, rhs: &'a M) -> MapJoinLeftIter<Self, &'a M>
     where
         M: MapGet<K>,
+        M::Key: Borrow<K>,
     {
         MapJoinLeftIter {
             iter: self,
@@ -42,6 +44,7 @@ pub trait MapJoin<'a, K: 'a, V>: Iterator<Item = (&'a K, V)> + Sized {
     fn map_join_left_excl<M>(self, rhs: &'a M) -> MapJoinLeftExclIter<Self, &'a M>
     where
         M: MapGet<K>,
+        M::Key: Borrow<K>,
     {
         MapJoinLeftExclIter {
             iter: self,
@@ -58,6 +61,7 @@ pub trait MapJoin<'a, K: 'a, V>: Iterator<Item = (&'a K, V)> + Sized {
     unsafe fn map_join_mut<M>(self, rhs: &'a mut M) -> MapJoinIter<Self, &'a mut M>
     where
         M: MapMut<K>,
+        M::Key: Borrow<K>,
     {
         MapJoinIter {
             iter: self,
@@ -74,6 +78,7 @@ pub trait MapJoin<'a, K: 'a, V>: Iterator<Item = (&'a K, V)> + Sized {
     unsafe fn map_join_left_mut<M>(self, rhs: &'a mut M) -> MapJoinLeftIter<Self, &'a mut M>
     where
         M: MapMut<K>,
+        M::Key: Borrow<K>,
     {
         MapJoinLeftIter {
             iter: self,
@@ -100,6 +105,7 @@ impl<'a, K: 'a, V, LHS, RHS> Iterator for MapJoinIter<LHS, &'a RHS>
 where
     LHS: Iterator<Item = (&'a K, V)>,
     RHS: MapGet<K>,
+    RHS::Key: Borrow<K>,
 {
     type Item = (&'a K, (&'a RHS::Value, V));
 
@@ -123,6 +129,7 @@ impl<'a, K: 'a, V, LHS, RHS> Iterator for MapJoinIter<LHS, &'a mut RHS>
 where
     LHS: Iterator<Item = (&'a K, V)>,
     RHS: MapMut<K>,
+    RHS::Key: Borrow<K>,
 {
     type Item = (&'a K, (&'a mut RHS::Value, V));
 
@@ -167,6 +174,7 @@ impl<'a, K: 'a, V, LHS, RHS> Iterator for MapJoinLeftIter<LHS, &'a RHS>
 where
     LHS: Iterator<Item = (&'a K, V)>,
     RHS: MapGet<K>,
+    RHS::Key: Borrow<K>,
 {
     type Item = (&'a K, (Option<&'a RHS::Value>, V));
 
@@ -187,6 +195,7 @@ impl<'a, K: 'a, V, LHS, RHS> Iterator for MapJoinLeftIter<LHS, &'a mut RHS>
 where
     LHS: Iterator<Item = (&'a K, V)>,
     RHS: MapMut<K>,
+    RHS::Key: Borrow<K>,
 {
     type Item = (&'a K, (Option<&'a mut RHS::Value>, V));
 
@@ -231,6 +240,7 @@ impl<'a, K: 'a, V, LHS, RHS> Iterator for MapJoinLeftExclIter<LHS, &'a RHS>
 where
     LHS: Iterator<Item = (&'a K, V)>,
     RHS: MapGet<K>,
+    RHS::Key: Borrow<K>,
 {
     type Item = LHS::Item;
 

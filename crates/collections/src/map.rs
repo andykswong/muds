@@ -2,14 +2,20 @@
 
 use core::borrow::Borrow;
 
-/// Getter for a map.
-pub trait MapGet<K: ?Sized> {
+/// A key-value map.
+pub trait Map {
     /// Key type
-    type Key: Borrow<K>;
+    type Key;
 
     /// Value type
     type Value;
+}
 
+/// Getter for a map.
+pub trait MapGet<K: ?Sized>: Map
+where
+    Self::Key: Borrow<K>,
+{
     /// Returns a reference to the value corresponding to the `key` if exists.
     fn get(&self, key: &K) -> Option<&Self::Value>;
 
@@ -21,7 +27,10 @@ pub trait MapGet<K: ?Sized> {
 }
 
 /// Mutator for a map.
-pub trait MapMut<K: ?Sized>: MapGet<K> {
+pub trait MapMut<K: ?Sized>: MapGet<K>
+where
+    Self::Key: Borrow<K>,
+{
     /// Returns a mutable reference to the value corresponding to the `key` if exists.
     fn get_mut(&mut self, key: &K) -> Option<&mut Self::Value>;
 
@@ -30,13 +39,7 @@ pub trait MapMut<K: ?Sized>: MapGet<K> {
 }
 
 /// Operation to insert into a map.
-pub trait MapInsert {
-    /// Key type
-    type Key;
-
-    /// Value type
-    type Value;
-
+pub trait MapInsert: Map {
     /// Inserts `value` into the map. The existing value in the map is returned.
     fn insert(&mut self, key: Self::Key, value: Self::Value) -> Option<Self::Value>;
 }

@@ -1,4 +1,4 @@
-use crate::{Clear, Len, MapGet, MapInsert, MapMut, Retain};
+use crate::{Clear, Len, Map, MapGet, MapInsert, MapMut, Retain};
 use core::{
     borrow::Borrow,
     hash::{BuildHasher, Hash},
@@ -24,12 +24,14 @@ impl<K, V, S> Clear for HashMap<K, V, S> {
     }
 }
 
+impl<K, V, S> Map for HashMap<K, V, S> {
+    type Key = K;
+    type Value = V;
+}
+
 impl<B: ?Sized + Eq + Hash, K: Borrow<B> + Eq + Hash, V, S: BuildHasher> MapGet<B>
     for HashMap<K, V, S>
 {
-    type Key = K;
-    type Value = V;
-
     #[inline]
     fn get(&self, key: &B) -> Option<&Self::Value> {
         self.get(key)
@@ -56,9 +58,6 @@ impl<B: ?Sized + Eq + Hash, K: Borrow<B> + Eq + Hash, V, S: BuildHasher> MapMut<
 }
 
 impl<K: Eq + Hash, V, S: BuildHasher> MapInsert for HashMap<K, V, S> {
-    type Key = K;
-    type Value = V;
-
     #[inline]
     fn insert(&mut self, key: Self::Key, value: Self::Value) -> Option<Self::Value> {
         self.insert(key, value)

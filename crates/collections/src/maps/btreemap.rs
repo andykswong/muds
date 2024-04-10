@@ -1,4 +1,4 @@
-use crate::{Clear, Len, MapGet, MapInsert, MapMut, Retain};
+use crate::{Clear, Len, Map, MapGet, MapInsert, MapMut, Retain};
 use alloc::collections::BTreeMap;
 use core::borrow::Borrow;
 
@@ -21,10 +21,12 @@ impl<K: Ord, V> Clear for BTreeMap<K, V> {
     }
 }
 
-impl<B: ?Sized + Ord, K: Borrow<B> + Ord, V> MapGet<B> for BTreeMap<K, V> {
+impl<K, V> Map for BTreeMap<K, V> {
     type Key = K;
     type Value = V;
+}
 
+impl<B: ?Sized + Ord, K: Borrow<B> + Ord, V> MapGet<B> for BTreeMap<K, V> {
     #[inline]
     fn get(&self, key: &B) -> Option<&Self::Value> {
         self.get(key)
@@ -49,9 +51,6 @@ impl<B: ?Sized + Ord, K: Borrow<B> + Ord, V> MapMut<B> for BTreeMap<K, V> {
 }
 
 impl<K: Ord, V> MapInsert for BTreeMap<K, V> {
-    type Key = K;
-    type Value = V;
-
     #[inline]
     fn insert(&mut self, key: Self::Key, value: Self::Value) -> Option<Self::Value> {
         self.insert(key, value)

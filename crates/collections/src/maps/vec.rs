@@ -1,4 +1,4 @@
-use crate::{Clear, Len, MapGet, MapInsert, MapMut, Pop, Push, Retain};
+use crate::{Clear, Len, Map, MapGet, MapInsert, MapMut, Pop, Push, Retain};
 use alloc::vec::Vec;
 use core::mem::replace;
 
@@ -41,10 +41,12 @@ impl<T> Pop for Vec<T> {
     }
 }
 
-impl<T> MapGet<usize> for Vec<T> {
+impl<T> Map for Vec<T> {
     type Key = usize;
     type Value = T;
+}
 
+impl<T> MapGet<usize> for Vec<T> {
     #[inline]
     fn get(&self, key: &usize) -> Option<&Self::Value> {
         self.as_slice().get(*key)
@@ -74,9 +76,6 @@ impl<T> MapMut<usize> for Vec<T> {
 }
 
 impl<T: Default> MapInsert for Vec<T> {
-    type Key = usize;
-    type Value = T;
-
     /// Replaces an element at given index.
     #[inline]
     fn insert(&mut self, key: Self::Key, value: Self::Value) -> Option<Self::Value> {

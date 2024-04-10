@@ -4,7 +4,7 @@ use genindex::{GenIndex, IndexPair};
 
 static INVALID_INDEX: &str = "invalid index";
 
-/// [SparseSet] is a type of associative array that uses a dense and a sparse vector to map keys to elements.
+/// An associative array that uses a dense and a sparse vector to map keys to elements.
 #[derive(Clone, Debug, Default, Eq)]
 pub struct SparseSet<T, I = IndexPair> {
     sparse: Vec<usize>,
@@ -53,8 +53,10 @@ impl<T, I> SparseSet<T, I> {
     /// # Examples
     /// ```rust
     /// # use collections::SparseSet;
-    /// let mut map = SparseSet::<()>::new();
-    /// assert_eq!(map.len(), 0);
+    /// # use genindex::{GenIndex, IndexU64};
+    /// let mut set = SparseSet::<u64, IndexU64>::new();
+    /// set.insert(1.into(), 1);
+    /// assert_eq!(set.len(), 1);
     /// ```
     #[inline]
     pub fn len(&self) -> usize {
@@ -66,9 +68,11 @@ impl<T, I> SparseSet<T, I> {
     /// # Examples
     /// ```rust
     /// # use collections::SparseSet;
-    /// # let mut map = SparseSet::<()>::new();
-    /// map.clear();
-    /// assert_eq!(map.len(), 0);
+    /// # use genindex::{GenIndex, IndexU64};
+    /// let mut set = SparseSet::<u64, IndexU64>::new();
+    /// set.insert(1.into(), 1);
+    /// set.clear();
+    /// assert_eq!(set.len(), 0);
     /// ```
     pub fn clear(&mut self) {
         self.sparse.clear();
@@ -353,12 +357,8 @@ where
 
 mod iter {
     use super::{SparseSet, SparseSetIter, SparseSetIterMut};
-    use genindex::GenIndex;
 
-    impl<T, I: GenIndex> IntoIterator for SparseSet<T, I>
-    where
-        I::Index: TryInto<usize>,
-    {
+    impl<T, I> IntoIterator for SparseSet<T, I> {
         type Item = (I, T);
         type IntoIter = alloc::vec::IntoIter<(I, T)>;
 
@@ -368,7 +368,7 @@ mod iter {
         }
     }
 
-    impl<'a, T, I: GenIndex> IntoIterator for &'a SparseSet<T, I> {
+    impl<'a, T, I> IntoIterator for &'a SparseSet<T, I> {
         type Item = (&'a I, &'a T);
         type IntoIter = SparseSetIter<'a, T, I>;
 
@@ -378,7 +378,7 @@ mod iter {
         }
     }
 
-    impl<'a, T, I: GenIndex> IntoIterator for &'a mut SparseSet<T, I> {
+    impl<'a, T, I> IntoIterator for &'a mut SparseSet<T, I> {
         type Item = (&'a I, &'a mut T);
         type IntoIter = SparseSetIterMut<'a, T, I>;
 
@@ -482,7 +482,7 @@ mod core_impl {
 
 mod collections_impl {
     use super::SparseSet;
-    use crate::{Clear, Len, MapGet, MapInsert, MapMut, Retain};
+    use crate::{Clear, Len, Map, MapGet, MapInsert, MapMut, Retain};
     use genindex::GenIndex;
 
     impl<T, I> Clear for SparseSet<T, I> {
@@ -499,15 +499,17 @@ mod collections_impl {
         }
     }
 
+    impl<T, I> Map for SparseSet<T, I> {
+        type Key = I;
+        type Value = T;
+    }
+
     impl<T, I: GenIndex> MapGet<I> for SparseSet<T, I>
     where
         I::Index: TryInto<usize>,
     {
-        type Key = I;
-        type Value = T;
-
         #[inline]
-        fn get(&self, key: &Self::Key) -> Option<&Self::Value> {
+        fn get(&self, key: &I) -> Option<&Self::Value> {
             self.get(key)
         }
     }
@@ -517,12 +519,12 @@ mod collections_impl {
         I::Index: TryInto<usize>,
     {
         #[inline]
-        fn get_mut(&mut self, key: &Self::Key) -> Option<&mut Self::Value> {
+        fn get_mut(&mut self, key: &I) -> Option<&mut Self::Value> {
             self.get_mut(key)
         }
 
         #[inline]
-        fn remove(&mut self, key: &Self::Key) -> Option<Self::Value> {
+        fn remove(&mut self, key: &I) -> Option<Self::Value> {
             self.remove(key)
         }
     }
@@ -531,9 +533,6 @@ mod collections_impl {
     where
         I::Index: TryInto<usize>,
     {
-        type Key = I;
-        type Value = T;
-
         #[inline]
         fn insert(&mut self, key: Self::Key, value: Self::Value) -> Option<Self::Value> {
             self.insert(key, value)

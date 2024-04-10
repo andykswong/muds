@@ -548,7 +548,7 @@ mod core_impl {
 
 mod collections_impl {
     use super::PagedSlotMap;
-    use crate::{Clear, Len, MapGet, MapInsert, MapMut, Push, Retain};
+    use crate::{Clear, Len, Map, MapGet, MapInsert, MapMut, Push, Retain};
     use core::mem::replace;
     use genindex::GenIndex;
 
@@ -579,15 +579,17 @@ mod collections_impl {
         }
     }
 
+    impl<T, I, const N: usize> Map for PagedSlotMap<T, I, N> {
+        type Key = I;
+        type Value = T;
+    }
+
     impl<T, I: GenIndex, const N: usize> MapGet<I> for PagedSlotMap<T, I, N>
     where
         I::Index: TryInto<usize>,
     {
-        type Key = I;
-        type Value = T;
-
         #[inline]
-        fn get(&self, key: &Self::Key) -> Option<&Self::Value> {
+        fn get(&self, key: &I) -> Option<&Self::Value> {
             self.get(key)
         }
     }
@@ -597,12 +599,12 @@ mod collections_impl {
         I::Index: TryFrom<usize> + TryInto<usize>,
     {
         #[inline]
-        fn get_mut(&mut self, key: &Self::Key) -> Option<&mut Self::Value> {
+        fn get_mut(&mut self, key: &I) -> Option<&mut Self::Value> {
             self.get_mut(key)
         }
 
         #[inline]
-        fn remove(&mut self, key: &Self::Key) -> Option<Self::Value> {
+        fn remove(&mut self, key: &I) -> Option<Self::Value> {
             self.remove(key)
         }
     }
@@ -611,9 +613,6 @@ mod collections_impl {
     where
         I::Index: TryInto<usize>,
     {
-        type Key = I;
-        type Value = T;
-
         #[inline]
         fn insert(&mut self, key: Self::Key, value: Self::Value) -> Option<Self::Value> {
             let dest = self.get_mut(&key)?;
