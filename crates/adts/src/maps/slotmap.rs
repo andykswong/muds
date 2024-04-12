@@ -18,7 +18,7 @@ impl<T, I, const N: usize> PagedSlotMap<T, I, N> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::PagedSlotMap;
+    /// # use adts::PagedSlotMap;
     /// let map = PagedSlotMap::<()>::new();
     /// ```
     #[inline]
@@ -36,7 +36,7 @@ impl<T, I, const N: usize> PagedSlotMap<T, I, N> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::PagedSlotMap;
+    /// # use adts::PagedSlotMap;
     /// let mut map = PagedSlotMap::<()>::new();
     /// assert_eq!(map.capacity(), 0);
     /// map.push(());
@@ -51,7 +51,7 @@ impl<T, I, const N: usize> PagedSlotMap<T, I, N> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::PagedSlotMap;
+    /// # use adts::PagedSlotMap;
     /// let mut map = PagedSlotMap::<()>::new();
     /// assert_eq!(map.len(), 0);
     /// map.push(());
@@ -66,7 +66,7 @@ impl<T, I, const N: usize> PagedSlotMap<T, I, N> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::PagedSlotMap;
+    /// # use adts::PagedSlotMap;
     /// # let mut map = PagedSlotMap::<()>::new();
     /// map.push(());
     /// map.push(());
@@ -90,7 +90,7 @@ impl<T, I, const N: usize> PagedSlotMap<T, I, N> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::PagedSlotMap;
+    /// # use adts::PagedSlotMap;
     /// let mut map = PagedSlotMap::<()>::new();
     /// map.reserve(10);
     /// assert!(map.capacity() == 64);
@@ -112,7 +112,7 @@ where
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::PagedSlotMap;
+    /// # use adts::PagedSlotMap;
     /// let mut map = PagedSlotMap::<i32>::new();
     /// let idx = map.push(123);
     ///
@@ -133,7 +133,7 @@ where
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::PagedSlotMap;
+    /// # use adts::PagedSlotMap;
     /// let mut map = PagedSlotMap::<i32>::new();
     /// let idx = map.push(123);
     ///
@@ -154,7 +154,7 @@ where
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::PagedSlotMap;
+    /// # use adts::PagedSlotMap;
     /// # use genindex::GenIndex;
     /// let mut map = PagedSlotMap::<u32>::new();
     /// for i in 0..10 {
@@ -179,7 +179,7 @@ where
     ///
     /// # Examples
     /// ```
-    /// # use collections::PagedSlotMap;
+    /// # use adts::PagedSlotMap;
     /// # use genindex::GenIndex;
     /// let mut map = PagedSlotMap::<u32>::new();
     /// for i in 0..10 {
@@ -214,7 +214,7 @@ where
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::PagedSlotMap;
+    /// # use adts::PagedSlotMap;
     /// let mut map = PagedSlotMap::<i32>::new();
     /// let idx = map.push(123);
     /// assert_eq!(map.get(&idx), Some(&123));
@@ -244,7 +244,7 @@ where
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::PagedSlotMap;
+    /// # use adts::PagedSlotMap;
     /// let mut map = PagedSlotMap::<i32>::new();
     /// let i = map.push(123);
     /// assert_eq!(map.remove(&i), Some(123));
@@ -266,7 +266,7 @@ where
     ///
     /// # Examples
     /// ```
-    /// # use collections::PagedSlotMap;
+    /// # use adts::PagedSlotMap;
     /// let mut map = PagedSlotMap::<i32>::new();
     /// let idx1 = map.push(1);
     /// let idx2 = map.push(2);

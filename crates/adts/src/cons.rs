@@ -6,7 +6,7 @@ use core::marker::PhantomData;
 ///
 /// # Examples
 /// ```
-/// # use collections::cons;
+/// # use adts::cons;
 /// let (c1, (c2, (c3, ()))) = cons!(123f32, "hello", Some(45));
 /// assert_eq!((c1, c2, c3), (123f32, "hello", Some(45)));
 ///
@@ -75,7 +75,7 @@ macro_rules! cons {
 ///
 /// # Examples
 /// ```
-/// # use collections::{cons, Cons};
+/// # use adts::{cons, Cons};
 /// let c: Cons!(f32, &str, Option<i32>) = cons![123f32, "hello", Some(45)];
 /// let c: Cons!(f32, ..Cons!(&str, Option<i32>)) = cons![123f32, "hello", Some(45)];
 /// ```
@@ -97,7 +97,7 @@ pub trait Cons: Sized {
     ///
     /// # Examples
     /// ```
-    /// # use collections::{cons, Cons};
+    /// # use adts::{cons, Cons};
     /// assert_eq!(cons!(1, 2, 3, 4, 5).len(), 5);
     /// ```
     #[inline]
@@ -109,7 +109,7 @@ pub trait Cons: Sized {
     ///
     /// # Examples
     /// ```
-    /// # use collections::{cons, Cons};
+    /// # use adts::{cons, Cons};
     /// assert!(().is_empty());
     /// assert!(!cons!(1, 2, 3, 4, 5).is_empty());
     /// ```
@@ -122,7 +122,7 @@ pub trait Cons: Sized {
     ///
     /// # Examples
     /// ```
-    /// # use collections::{cons, Cons};
+    /// # use adts::{cons, Cons};
     /// assert_eq!(*cons!(1f32, 1i32, 1u32).get::<i32, _>(), 1i32);
     /// ```
     #[inline]
@@ -136,7 +136,7 @@ pub trait Cons: Sized {
     /// Mutably gets an element by type from this cons.
     /// # Examples
     /// ```
-    /// # use collections::{cons, Cons};
+    /// # use adts::{cons, Cons};
     /// let mut c = cons!(1f32, 1i32, 1u32);
     /// *c.get_mut::<i32, _>() = 10;
     /// assert_eq!(c, cons!(1f32, 10i32, 1u32));
@@ -153,7 +153,7 @@ pub trait Cons: Sized {
     ///
     /// # Examples
     /// ```
-    /// # use collections::{cons, Cons};
+    /// # use adts::{cons, Cons};
     /// let cons!(c1, c2, c3, c4, c5) = cons!(1, 2).concat(cons!(3, 4, 5));
     /// assert_eq!([c1, c2, c3, c4, c5], [1, 2, 3, 4, 5]);
     /// ```
@@ -169,7 +169,7 @@ pub trait Cons: Sized {
     //
     /// # Examples
     /// ```
-    /// # use collections::{cons, Cons};
+    /// # use adts::{cons, Cons};
     /// let cons!(c1, c2, c3, c4, c5) = cons!(1, 2, 3, 4, 5).rev();
     /// assert_eq!([c1, c2, c3, c4, c5], [5, 4, 3, 2, 1]);
     /// ```

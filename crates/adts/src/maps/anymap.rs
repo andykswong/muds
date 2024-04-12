@@ -49,7 +49,7 @@ impl<T: ?Sized, M> AnyMap<T, M> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::AnyMap;
+    /// # use adts::AnyMap;
     /// let map = <AnyMap>::new();
     /// ```
     #[inline]
@@ -67,7 +67,7 @@ impl<T: ?Sized, M> AnyMap<T, M> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::AnyMap;
+    /// # use adts::AnyMap;
     /// let mut map = <AnyMap>::new();
     /// assert_eq!(map.len(), 0);
     /// map.insert(1u32);
@@ -85,7 +85,7 @@ impl<T: ?Sized, M> AnyMap<T, M> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::{AnyMap, AnyMapKey};
+    /// # use adts::{AnyMap, AnyMapKey};
     /// let mut map = <AnyMap>::new();
     /// map.insert(1u32);
     /// map.clear();
@@ -109,7 +109,7 @@ where
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::AnyMap;
+    /// # use adts::AnyMap;
     /// let mut map = <AnyMap>::new();
     /// map.insert(1u32);
     /// assert_eq!(map.get::<u32>(), Some(&1));
@@ -126,7 +126,7 @@ where
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::AnyMap;
+    /// # use adts::AnyMap;
     /// let mut map = <AnyMap>::new();
     /// map.insert(1u32);
     /// *map.get_mut::<u32>().unwrap() = 2;
@@ -144,7 +144,7 @@ where
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::AnyMap;
+    /// # use adts::AnyMap;
     /// let mut map = <AnyMap>::new();
     /// assert_eq!(map.insert(1u32), None);
     /// assert_eq!(map.remove::<u32>(), Some(1));
@@ -161,7 +161,7 @@ where
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::AnyMap;
+    /// # use adts::AnyMap;
     /// let mut map = <AnyMap>::new();
     /// assert_eq!(map.insert(1u32), None);
     /// assert_eq!(map.insert(2u32), Some(1));
@@ -179,7 +179,7 @@ where
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::{AnyMap, AnyMapKey};
+    /// # use adts::{AnyMap, AnyMapKey};
     /// let mut map = <AnyMap>::new();
     /// let key = AnyMapKey::with_type::<u32>();
     /// map.insert(1u32);
@@ -197,7 +197,7 @@ where
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::{AnyMap, AnyMapKey};
+    /// # use adts::{AnyMap, AnyMapKey};
     /// let mut map = <AnyMap>::new();
     /// let key = AnyMapKey::with_type::<u32>();
     /// map.insert(1u32);
@@ -216,7 +216,7 @@ where
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::{AnyMap, AnyMapKey};
+    /// # use adts::{AnyMap, AnyMapKey};
     /// let mut map = <AnyMap>::new();
     /// assert_eq!(map.insert(1u32), None);
     /// assert_eq!(map.remove_by_key(&AnyMapKey::with_type::<u32>()), Some(1u32));
@@ -234,7 +234,7 @@ where
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::{AnyMap, AnyMapKey};
+    /// # use adts::{AnyMap, AnyMapKey};
     /// let mut map = <AnyMap>::new();
     /// let key = AnyMapKey::with_type::<u32>();
     /// assert_eq!(map.insert_by_key(key, 1u32), None);

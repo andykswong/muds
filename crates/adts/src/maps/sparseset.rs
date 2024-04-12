@@ -24,7 +24,7 @@ impl<T, I> SparseSet<T, I> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::SparseSet;
+    /// # use adts::SparseSet;
     /// let map = SparseSet::<()>::new();
     /// ```
     #[inline]
@@ -39,7 +39,7 @@ impl<T, I> SparseSet<T, I> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::SparseSet;
+    /// # use adts::SparseSet;
     /// let mut map = SparseSet::<()>::new();
     /// assert_eq!(map.capacity(), 0);
     /// ```
@@ -52,7 +52,7 @@ impl<T, I> SparseSet<T, I> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::SparseSet;
+    /// # use adts::SparseSet;
     /// # use genindex::{GenIndex, IndexU64};
     /// let mut set = SparseSet::<u64, IndexU64>::new();
     /// set.insert(1.into(), 1);
@@ -67,7 +67,7 @@ impl<T, I> SparseSet<T, I> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::SparseSet;
+    /// # use adts::SparseSet;
     /// # use genindex::{GenIndex, IndexU64};
     /// let mut set = SparseSet::<u64, IndexU64>::new();
     /// set.insert(1.into(), 1);
@@ -88,7 +88,7 @@ impl<T, I> SparseSet<T, I> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::SparseSet;
+    /// # use adts::SparseSet;
     /// let mut map = SparseSet::<()>::new();
     /// map.reserve(10);
     /// assert!(map.capacity() >= 10);
@@ -105,7 +105,7 @@ impl<T, I> SparseSet<T, I> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::SparseSet;
+    /// # use adts::SparseSet;
     /// # use genindex::{GenIndex, IndexU64};
     /// let mut set = SparseSet::<u64, IndexU64>::new();
     /// for i in 1..10 {
@@ -131,7 +131,7 @@ impl<T, I> SparseSet<T, I> {
     ///
     /// # Examples
     /// ```
-    /// # use collections::SparseSet;
+    /// # use adts::SparseSet;
     /// # use genindex::{GenIndex, IndexU64};
     /// let mut set = SparseSet::<u64, IndexU64>::new();
     /// for i in 1..10 {
@@ -162,7 +162,7 @@ where
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::SparseSet;
+    /// # use adts::SparseSet;
     /// # use genindex::IndexU64;
     /// let mut set = SparseSet::<i32, IndexU64>::new();
     /// let idx = 1.into();
@@ -185,7 +185,7 @@ where
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::SparseSet;
+    /// # use adts::SparseSet;
     /// # use genindex::IndexU64;
     /// let mut set = SparseSet::<i32, IndexU64>::new();
     /// let idx = 1.into();
@@ -212,7 +212,7 @@ where
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::SparseSet;
+    /// # use adts::SparseSet;
     /// # use genindex::IndexU64;
     /// let mut set = SparseSet::<i32, IndexU64>::new();
     /// let idx = 1.into();
@@ -241,7 +241,7 @@ where
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::SparseSet;
+    /// # use adts::SparseSet;
     /// # use genindex::IndexU64;
     /// let mut set = SparseSet::<i32, IndexU64>::new();
     /// set.insert(1.into(), 123);
@@ -272,7 +272,7 @@ where
     ///
     /// # Examples
     /// ```
-    /// # use collections::SparseSet;
+    /// # use adts::SparseSet;
     /// # use genindex::IndexU64;
     /// let mut set = SparseSet::<i32, IndexU64>::new();
     /// set.insert(1.into(), 1);
@@ -299,7 +299,7 @@ where
     ///
     /// # Examples
     /// ```
-    /// # use collections::SparseSet;
+    /// # use adts::SparseSet;
     /// # use genindex::IndexU64;
     /// let mut set = SparseSet::<i32, IndexU64>::new();
     /// let (idx1, idx2, idx3) = (0.into(), 5.into(), 1.into());

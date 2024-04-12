@@ -13,7 +13,7 @@ pub trait MapJoin<'a, K: 'a, V>: Iterator<Item = (&'a K, V)> + Sized {
     /// # Examples
     /// ```rust
     /// # use std::collections::BTreeMap;
-    /// # use collections::{cons, MapJoin};
+    /// # use adts::{cons, MapJoin};
     /// let mut map = BTreeMap::new();
     /// map.insert(1, 2);
     /// map.insert(3, 4);
@@ -31,7 +31,7 @@ pub trait MapJoin<'a, K: 'a, V>: Iterator<Item = (&'a K, V)> + Sized {
     /// # Examples
     /// ```rust
     /// # use std::collections::BTreeMap;
-    /// # use collections::{cons, MapJoin};
+    /// # use adts::{cons, MapJoin};
     /// let mut map = BTreeMap::new();
     /// let mut map2 = BTreeMap::new();
     /// map.insert(1, 1);
@@ -61,7 +61,7 @@ pub trait MapJoin<'a, K: 'a, V>: Iterator<Item = (&'a K, V)> + Sized {
     /// # Examples
     /// ```rust
     /// # use std::collections::BTreeMap;
-    /// # use collections::{cons, MapJoin};
+    /// # use adts::{cons, MapJoin};
     /// let mut map = BTreeMap::new();
     /// let mut map2 = BTreeMap::new();
     /// map.insert(1, 1);
@@ -91,7 +91,7 @@ pub trait MapJoin<'a, K: 'a, V>: Iterator<Item = (&'a K, V)> + Sized {
     /// # Examples
     /// ```rust
     /// # use std::collections::BTreeMap;
-    /// # use collections::{cons, MapJoin};
+    /// # use adts::{cons, MapJoin};
     /// let mut map = BTreeMap::new();
     /// let mut map2 = BTreeMap::new();
     /// map.insert(1, 1);
@@ -122,7 +122,7 @@ pub trait MapJoin<'a, K: 'a, V>: Iterator<Item = (&'a K, V)> + Sized {
     /// # Examples
     /// ```rust
     /// # use std::collections::BTreeMap;
-    /// # use collections::{cons, MapJoin};
+    /// # use adts::{cons, MapJoin};
     /// let mut map = BTreeMap::new();
     /// let mut map2 = BTreeMap::new();
     /// map.insert(1, 1);
@@ -153,7 +153,7 @@ pub trait MapJoin<'a, K: 'a, V>: Iterator<Item = (&'a K, V)> + Sized {
     /// # Examples
     /// ```rust
     /// # use std::collections::BTreeMap;
-    /// # use collections::{cons, MapJoin};
+    /// # use adts::{cons, MapJoin};
     /// let mut map = BTreeMap::new();
     /// let mut map2 = BTreeMap::new();
     /// map.insert(1, 1);

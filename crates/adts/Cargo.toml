@@ -1,5 +1,5 @@
 [package]
-name = "collections"
+name = "adts"
 version = "0.2.0"
 edition = "2021"
 authors = ["Andy K. S. Wong <andykswong@outlook.com>"]
@@ -7,13 +7,10 @@ license = "MIT"
 readme = "README.md"
 repository = "https://github.com/andykswong/muds"
 homepage = "https://github.com/andykswong/muds"
-documentation = "https://docs.rs/collections"
-description = "Common collections library"
+documentation = "https://docs.rs/adts"
+description = "Common abstract data type traits and implementations"
 categories = ["data-structures", "no-std", "wasm"]
 keywords = ["collections", "muds"]
-
-[package.metadata.component]
-package = "muds:collections"
 
 [package.metadata.docs.rs]
 features = ["serde", "std"]

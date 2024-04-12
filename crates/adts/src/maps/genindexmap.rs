@@ -46,7 +46,7 @@ impl<T, I, M> GenIndexMap<T, I, M> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::GenIndexMap;
+    /// # use adts::GenIndexMap;
     /// let map = GenIndexMap::<()>::new();
     /// ```
     #[inline]
@@ -64,7 +64,7 @@ impl<T, I, M> GenIndexMap<T, I, M> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::GenIndexMap;
+    /// # use adts::GenIndexMap;
     /// # use genindex::IndexU64;
     /// let mut map = GenIndexMap::<i32, IndexU64>::new();
     /// assert_eq!(map.len(), 0);
@@ -83,7 +83,7 @@ impl<T, I, M> GenIndexMap<T, I, M> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::GenIndexMap;
+    /// # use adts::GenIndexMap;
     /// # use genindex::IndexU64;
     /// let mut map = GenIndexMap::<i32, IndexU64>::new();
     /// map.insert(1.into(), 123);
@@ -102,7 +102,7 @@ impl<T, I, M> GenIndexMap<T, I, M> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::GenIndexMap;
+    /// # use adts::GenIndexMap;
     /// # use genindex::{GenIndex, IndexU64};
     /// let mut map = GenIndexMap::<u64, IndexU64>::new();
     /// for i in 1..10 {
@@ -131,7 +131,7 @@ impl<T, I, M> GenIndexMap<T, I, M> {
     ///
     /// # Examples
     /// ```
-    /// # use collections::GenIndexMap;
+    /// # use adts::GenIndexMap;
     /// # use genindex::{GenIndex, IndexU64};
     /// let mut map = GenIndexMap::<u64, IndexU64>::new();
     /// for i in 1..10 {
@@ -162,7 +162,7 @@ impl<T, I: GenIndex, M> GenIndexMap<T, I, M> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::GenIndexMap;
+    /// # use adts::GenIndexMap;
     /// # use genindex::IndexU64;
     /// let mut map = GenIndexMap::<i32, IndexU64>::new();
     /// map.insert(1.into(), 123);
@@ -187,7 +187,7 @@ impl<T, I: GenIndex, M> GenIndexMap<T, I, M> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::GenIndexMap;
+    /// # use adts::GenIndexMap;
     /// # use genindex::IndexU64;
     /// let mut map = GenIndexMap::<i32, IndexU64>::new();
     /// map.insert(1.into(), 123);
@@ -213,7 +213,7 @@ impl<T, I: GenIndex, M> GenIndexMap<T, I, M> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::GenIndexMap;
+    /// # use adts::GenIndexMap;
     /// # use genindex::IndexU64;
     /// let mut map = GenIndexMap::<i32, IndexU64>::new();
     /// map.insert(1.into(), 123);
@@ -239,7 +239,7 @@ impl<T, I: GenIndex, M> GenIndexMap<T, I, M> {
     ///
     /// # Examples
     /// ```
-    /// # use collections::GenIndexMap;
+    /// # use adts::GenIndexMap;
     /// # use genindex::IndexU64;
     /// let mut map = GenIndexMap::<i32, IndexU64>::new();
     /// map.insert(1.into(), 1);
@@ -260,7 +260,7 @@ impl<T, I: GenIndex, M> GenIndexMap<T, I, M> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::GenIndexMap;
+    /// # use adts::GenIndexMap;
     /// # use genindex::IndexU64;
     /// let mut map = GenIndexMap::<i32, IndexU64>::new();
     /// assert!(map.insert(1.into(), 123).is_none());

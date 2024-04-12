@@ -32,7 +32,7 @@ impl<T> VecMap<T> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::VecMap;
+    /// # use adts::VecMap;
     /// let map = VecMap::<()>::new();
     /// ```
     #[inline]
@@ -47,7 +47,7 @@ impl<T> VecMap<T> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::VecMap;
+    /// # use adts::VecMap;
     /// let mut map = VecMap::<()>::new();
     /// assert_eq!(map.capacity(), 0);
     /// map.reserve(10);
@@ -62,7 +62,7 @@ impl<T> VecMap<T> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::VecMap;
+    /// # use adts::VecMap;
     /// let mut map = VecMap::<()>::new();
     /// assert_eq!(map.len(), 0);
     /// map.insert(1, ());
@@ -78,7 +78,7 @@ impl<T> VecMap<T> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::VecMap;
+    /// # use adts::VecMap;
     /// let mut map = VecMap::<()>::new();
     /// map.insert(1, ());
     /// map.clear();
@@ -99,7 +99,7 @@ impl<T> VecMap<T> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::VecMap;
+    /// # use adts::VecMap;
     /// let mut map = VecMap::<()>::new();
     /// map.reserve(10);
     /// assert!(map.capacity() >= 10);
@@ -112,7 +112,7 @@ impl<T> VecMap<T> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::VecMap;
+    /// # use adts::VecMap;
     /// let mut map = VecMap::<i32>::new();
     /// let idx = 2;
     /// map.insert(idx, 123);
@@ -128,7 +128,7 @@ impl<T> VecMap<T> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::VecMap;
+    /// # use adts::VecMap;
     /// let mut map = VecMap::<i32>::new();
     /// let idx = 1;
     /// map.insert(idx, 123);
@@ -148,7 +148,7 @@ impl<T> VecMap<T> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::VecMap;
+    /// # use adts::VecMap;
     /// let mut map = VecMap::<i32>::new();
     /// let idx = 1;
     /// assert!(map.insert(idx, 123).is_none());
@@ -174,7 +174,7 @@ impl<T> VecMap<T> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::VecMap;
+    /// # use adts::VecMap;
     /// let mut map = VecMap::<i32>::new();
     /// map.insert(1, 123);
     /// assert_eq!(map.remove(1), Some(123));
@@ -195,7 +195,7 @@ impl<T> VecMap<T> {
     ///
     /// # Examples
     /// ```
-    /// # use collections::VecMap;
+    /// # use adts::VecMap;
     /// let mut map = VecMap::<i32>::new();
     /// map.insert(1, 1);
     /// map.insert(0, 2);
@@ -216,7 +216,7 @@ impl<T> VecMap<T> {
     ///
     /// # Examples
     /// ```rust
-    /// # use collections::VecMap;
+    /// # use adts::VecMap;
     /// let mut map = VecMap::<usize>::new();
     /// for i in 0..10 {
     ///     map.insert(i * 2, i * 2);
@@ -241,7 +241,7 @@ impl<T> VecMap<T> {
     ///
     /// # Examples
     /// ```
-    /// # use collections::VecMap;
+    /// # use adts::VecMap;
     /// let mut map = VecMap::<usize>::new();
     /// for i in 0..10 {
     ///     map.insert(i * 2, i * 2);

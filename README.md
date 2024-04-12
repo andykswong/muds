@@ -13,6 +13,7 @@
 
 |Crate|Version|Docs|Description|
 |------|-------|----|-----------|
+|[`adts`](./crates/adts)|[![Crates.io](https://img.shields.io/crates/v/adts)](https://crates.io/crates/adts)|[![docs.rs](https://img.shields.io/docsrs/adts)](https://docs.rs/adts)|Abstract Data Types Library|
 |[`genindex`](./crates/genindex)|[![Crates.io](https://img.shields.io/crates/v/genindex)](https://crates.io/crates/genindex)|[![docs.rs](https://img.shields.io/docsrs/genindex)](https://docs.rs/genindex)|Generational Index Library|
 |[`muds`](./crates/muds)|[![Crates.io](https://img.shields.io/crates/v/muds)](https://crates.io/crates/muds)|[![docs.rs](https://img.shields.io/docsrs/muds)](https://docs.rs/muds)|Data Structures and Entity-Component-System Library|
 
