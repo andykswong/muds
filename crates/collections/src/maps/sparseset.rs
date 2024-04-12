@@ -118,6 +118,7 @@ impl<T, I> SparseSet<T, I> {
     ///     count += 1;
     /// }
     /// assert_eq!(count, 9);
+    /// ```
     #[inline]
     pub fn iter(&self) -> SparseSetIter<'_, T, I> {
         fn map<I, T>((i, t): &(I, T)) -> (&I, &T) {

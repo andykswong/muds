@@ -228,6 +228,7 @@ impl<T> VecMap<T> {
     ///     count += 1;
     /// }
     /// assert_eq!(count, 10);
+    /// ```
     #[inline]
     pub fn iter(&self) -> VecMapIter<'_, T> {
         fn map<T>((i, t): (usize, &Option<T>)) -> Option<(usize, &T)> {

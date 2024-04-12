@@ -5,7 +5,6 @@ use genindex::{GenIndex, IndexPair};
 static INVALID_INDEX: &str = "invalid index";
 
 /// Paged generational index slot map.
-#[repr(C)]
 pub struct PagedSlotMap<T, I = IndexPair, const N: usize = 64> {
     indices: Vec<I>,
     values: Vec<Box<[MaybeUninit<T>; N]>>,

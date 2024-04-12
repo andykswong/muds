@@ -104,7 +104,7 @@ impl<T> Retain for Vec<T> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Clear, Len, MapGet, MapInsert, MapMut, Retain};
+    use crate::{Clear, Len, MapGet, MapInsert, MapMut, Pop, Push, Retain};
     use alloc::vec;
 
     #[test]
@@ -121,6 +121,20 @@ mod tests {
         assert!(MapGet::contains_key(&vec, &0));
         assert_eq!(MapGet::get(&vec, &1), Some(&1));
         assert_eq!(MapGet::get(&vec, &3), None);
+    }
+
+    #[test]
+    fn test_push() {
+        let mut vec = vec![0, 1, 2];
+        assert_eq!(Push::push(&mut vec, 3), 3);
+        assert_eq!(vec, vec![0, 1, 2, 3]);
+    }
+
+    #[test]
+    fn test_pop() {
+        let mut vec = vec![0, 1, 2];
+        assert_eq!(Pop::pop(&mut vec), Some(2));
+        assert_eq!(vec, vec![0, 1]);
     }
 
     #[test]

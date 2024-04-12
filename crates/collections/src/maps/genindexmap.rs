@@ -10,7 +10,7 @@ static INVALID_INDEX: &str = "invalid index";
 #[repr(transparent)]
 pub struct GenIndexMap<T, I = IndexPair, M = VecMap<(I, T)>> {
     map: M,
-    _phantom: PhantomData<(I, T)>,
+    marker: PhantomData<(I, T)>,
 }
 
 /// A [GenIndexMap] backed by a [VecMap].
@@ -56,7 +56,7 @@ impl<T, I, M> GenIndexMap<T, I, M> {
     {
         Self {
             map: Default::default(),
-            _phantom: PhantomData,
+            marker: PhantomData,
         }
     }
 
@@ -70,6 +70,7 @@ impl<T, I, M> GenIndexMap<T, I, M> {
     /// assert_eq!(map.len(), 0);
     /// map.insert(1.into(), 123);
     /// assert_eq!(map.len(), 1);
+    /// ```
     #[inline]
     pub fn len(&self) -> usize
     where
@@ -88,6 +89,7 @@ impl<T, I, M> GenIndexMap<T, I, M> {
     /// map.insert(1.into(), 123);
     /// map.clear();
     /// assert!(map.len() == 0);
+    /// ```
     #[inline]
     pub fn clear(&mut self)
     where
@@ -113,6 +115,7 @@ impl<T, I, M> GenIndexMap<T, I, M> {
     ///     count += 1;
     /// }
     /// assert_eq!(count, 9);
+    /// ```
     #[inline]
     pub fn iter<'a, K>(&'a self) -> GenIndexMapIter<'a, T, I, M>
     where
@@ -191,6 +194,7 @@ impl<T, I: GenIndex, M> GenIndexMap<T, I, M> {
     /// *map.get_mut(&1.into()).unwrap() += 1;
     /// assert_eq!(map.get(&1.into()), Some(&124));
     /// assert!(map.get_mut(&2.into()).is_none());
+    /// ```
     pub fn get_mut<K>(&mut self, key: &I) -> Option<&mut T>
     where
         I::Index: TryInto<K>,
@@ -501,7 +505,7 @@ mod serde_impl {
             let map: M = Deserialize::deserialize(deserializer)?;
             Ok(Self {
                 map,
-                _phantom: PhantomData,
+                marker: PhantomData,
             })
         }
     }
