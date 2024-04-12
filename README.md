@@ -1,11 +1,9 @@
 <h1 align="center">〰ᗰᑌᗪᔕ〰</h1>
 
-## muds - modular library for data-oriented design
+## [Work in Progress] modular library for data-oriented design
 
 [![license: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![build](https://github.com/andykswong/muds/actions/workflows/build.yaml/badge.svg)](https://github.com/andykswong/muds/actions/workflows/build.yaml)
-
-# Work in Progress!
 
 ## Overview
 `muds` is a modular library for building applications in a 
@@ -24,7 +22,7 @@ Documentation: http://andykswong.github.io/muds
 
 |Package|NPM|Description|
 |-------|---|-----------|
-|[`generational-index`](./packages/generational-index)|<a href="https://www.npmjs.com/package/generational-index"><img src="https://img.shields.io/npm/v/@muds/generational-index?label=generational-index" alt="NPM generational-index" /></a>|Generational index library|
+|[`generational-index`](./packages/generational-index)|[![npm](https://img.shields.io/npm/v/generational-index?label=generational-index)](https://www.npmjs.com/package/generational-index)|Generational index library|
 
 ## License
 This repository and the code inside it is licensed under the MIT License. Read [LICENSE](./LICENSE) for more information.

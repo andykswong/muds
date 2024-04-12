@@ -16,8 +16,5 @@ genindex = "0.2"
 Features:
 - `serde` - enables `serde` serialize/deserialize implementations of collections and indices
 
-## [Documentation](https://docs.rs/genindex)
-See Docs.rs: https://docs.rs/genindex
-
 ## License
 This repository and the code inside it is licensed under the MIT License. Read [LICENSE](./LICENSE) for more information.

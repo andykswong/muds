@@ -6,7 +6,7 @@
 [![build](https://github.com/andykswong/muds/actions/workflows/build.yaml/badge.svg)](https://github.com/andykswong/muds/actions/workflows/build.yaml)
 
 ## Overview
-`collections` is a library for collection traits and implementations. Currently its main features are [Map](./src/map.rs) implementations, including [genindex](https://docs.rs/genindex)-based optimized collections.
+`collections` is a library for collection traits and implementations. Currently its main features are [Map](./src/map.rs) implementations, including [genindex](https://crates.io/crates/genindex)-based optimized collections.
 
 ## Install
 ```toml
@@ -16,9 +16,6 @@ collections = "0.2"
 Features:
 - `std` - enables `std` support. enabled by default.
 - `serde` - enables `serde` serialize/deserialize implementations of collections and indices
-
-## [Documentation](https://docs.rs/collections)
-See Docs.rs: https://docs.rs/collections
 
 ## License
 This repository and the code inside it is licensed under the MIT License. Read [LICENSE](./LICENSE) for more information.
