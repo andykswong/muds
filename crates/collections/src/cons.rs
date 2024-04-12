@@ -13,36 +13,40 @@ use core::marker::PhantomData;
 /// let cons!(c1, c2, c3) = cons!(123f32, "hello", Some(45));
 /// assert_eq!(c3, Some(45));
 ///
+/// // LHS patterns needs to be escaped with {}
+/// let matched = if let cons!(_, _, {Some(c3)}) = cons!(123f32, "hello", Some(45)) { true } else { false };
+/// assert!(matched);
+///
 /// let cons!(c1, c2, c3, ..rest) = cons!(1, 2, 3, 4, 5);
 /// assert_eq!(rest, cons!(4, 5));
 ///
 /// // rev[..] captures in reverse order.
 /// let cons!(rev[c1, c2, c3, c4, c5]) = cons!(1, 2, 3, 4, 5);
-/// assert_eq!([c1, c2, c3], [5, 4, 3]);
+/// assert_eq!([c1, c2, c3, c4, c5], [5, 4, 3, 2, 1]);
 /// ```
 #[macro_export]
 macro_rules! cons {
     () => { () };
 
     // Base cases for rev, calls cons! normally
+    (rev[{$head:pat_param}] $($reversed:tt)*) => {
+        cons!($head, $($reversed)*)
+    };
     (rev[$head:tt] $($reversed:tt)*) => {
         cons!($head, $($reversed)*)
     };
     (rev[$head:expr] $($reversed:tt)*) => {
         cons!($head, $($reversed)*)
     };
-    (rev[$head:pat_param] $($reversed:tt)*) => {
-        cons!($head, $($reversed)*)
-    };
 
     // Recursively reverses the rev list
+    (rev[{$head:pat_param}, $($rest:tt)*] $($reversed:tt)*) => {
+        cons!(rev[$($rest)*] $head, $($reversed)*)
+    };
     (rev[$head:tt, $($rest:tt)*] $($reversed:tt)*) => {
         cons!(rev[$($rest)*] $head, $($reversed)*)
     };
     (rev[$head:expr, $($rest:tt)*] $($reversed:tt)*) => {
-        cons!(rev[$($rest)*] $head, $($reversed)*)
-    };
-    (rev[$head:pat_param, $($rest:tt)*] $($reversed:tt)*) => {
         cons!(rev[$($rest)*] $head, $($reversed)*)
     };
 
@@ -51,18 +55,18 @@ macro_rules! cons {
     (..$rest:expr) => { $rest };
 
     // Base cases, returns single element cons
+    ({$head:pat_param}) => { ($head, ()) };
     ($head:tt) => { ($head, ()) };
     ($head:expr) => { ($head, ()) };
-    ($head:pat_param) => { ($head, ()) };
 
     // Recursively builds the cons
+    ({$head:pat_param}, $($tail:tt)*) => {
+        ($head, cons!($($tail)*))
+    };
     ($head:tt, $($tail:tt)*) => {
         ($head, cons!($($tail)*))
     };
     ($head:expr, $($tail:tt)*) => {
-        ($head, cons!($($tail)*))
-    };
-    ($head:pat_param, $($tail:tt)*) => {
         ($head, cons!($($tail)*))
     };
 }
@@ -145,20 +149,20 @@ pub trait Cons: Sized {
         ConsGetter::get_mut(self)
     }
 
-    /// Append to this cons.
+    /// Concats this cons with RHS.
     ///
     /// # Examples
     /// ```
     /// # use collections::{cons, Cons};
-    /// let cons!(c1, c2, c3, c4, c5) = cons!(1, 2).append(cons!(3, 4, 5));
+    /// let cons!(c1, c2, c3, c4, c5) = cons!(1, 2).concat(cons!(3, 4, 5));
     /// assert_eq!([c1, c2, c3, c4, c5], [1, 2, 3, 4, 5]);
     /// ```
     #[inline]
-    fn append<RHS: Cons>(self, rhs: RHS) -> <Self as Append<RHS>>::Output
+    fn concat<RHS: Cons>(self, rhs: RHS) -> <Self as Concat<RHS>>::Output
     where
-        Self: Append<RHS>,
+        Self: Concat<RHS>,
     {
-        Append::append(self, rhs)
+        Concat::concat(self, rhs)
     }
 
     /// Reverse this cons.
@@ -186,37 +190,37 @@ impl<H, T: Cons> Cons for (H, T) {
     const LEN: usize = 1 + T::LEN;
 }
 
-/// Trait for appending to self.
-pub trait Append<RHS> {
+/// Trait for object concatenation.
+pub trait Concat<RHS> {
     /// Output type.
     type Output;
 
-    /// Append to self.
-    fn append(self, rhs: RHS) -> Self::Output;
+    /// Concats with RHS.
+    fn concat(self, rhs: RHS) -> Self::Output;
 }
 
-impl<RHS> Append<RHS> for ()
+impl<RHS> Concat<RHS> for ()
 where
     RHS: Cons,
 {
     type Output = RHS;
 
     #[inline(always)]
-    fn append(self, rhs: RHS) -> RHS {
+    fn concat(self, rhs: RHS) -> RHS {
         rhs
     }
 }
 
-impl<H, Tail, RHS> Append<RHS> for (H, Tail)
+impl<H, Tail, RHS> Concat<RHS> for (H, Tail)
 where
-    Tail: Append<RHS>,
+    Tail: Concat<RHS>,
     RHS: Cons,
 {
-    type Output = (H, <Tail as Append<RHS>>::Output);
+    type Output = (H, <Tail as Concat<RHS>>::Output);
 
     #[inline(always)]
-    fn append(self, rhs: RHS) -> Self::Output {
-        (self.0, self.1.append(rhs))
+    fn concat(self, rhs: RHS) -> Self::Output {
+        (self.0, self.1.concat(rhs))
     }
 }
 
@@ -241,13 +245,13 @@ impl IntoRev for () {
 impl<T, Tail> IntoRev for (T, Tail)
 where
     Tail: IntoRev,
-    <Tail as IntoRev>::Output: Append<(T, ())>,
+    <Tail as IntoRev>::Output: Concat<(T, ())>,
 {
-    type Output = <<Tail as IntoRev>::Output as Append<(T, ())>>::Output;
+    type Output = <<Tail as IntoRev>::Output as Concat<(T, ())>>::Output;
 
     #[inline(always)]
     fn rev(self) -> Self::Output {
-        self.1.rev().append((self.0, ()))
+        self.1.rev().concat((self.0, ()))
     }
 }
 

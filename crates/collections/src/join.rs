@@ -1,23 +1,54 @@
 //! Helper traits for joining with `Map`s.
 
+use crate::{cons, Concat, Cons};
+
 use super::{MapGet, MapMut};
 use core::{borrow::Borrow, iter::FusedIterator};
 
-/// Iterator trait for joining with [Map]s.
+/// Iterator trait for joining with [MapGet]s and [MapMut]s.
 pub trait MapJoin<'a, K: 'a, V>: Iterator<Item = (&'a K, V)> + Sized {
     /// Returns an iterator adaptor that wraps items as `Cons`, i.e. `(key, (value, ())`.
     /// Useful for chaining with multiple joins where the resulting item will be a valid `Cons`.
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use std::collections::BTreeMap;
+    /// # use collections::{cons, MapJoin};
+    /// let mut map = BTreeMap::new();
+    /// map.insert(1, 2);
+    /// map.insert(3, 4);
+    /// let mut iter = map.iter().cons();
+    /// assert_eq!(iter.next(), Some(cons!(&1, &2)));
+    /// assert_eq!(iter.next(), Some(cons!(&3, &4)));
+    /// ```
     #[inline(always)]
     fn cons(self) -> core::iter::Map<Self, fn((&'a K, V)) -> (&'a K, (V, ()))> {
         self.map(|(k, v)| (k, (v, ())))
     }
 
-    /// Returns an iterator adaptor that inner joins this iterator with a `Map`.
+    /// Returns an iterator adaptor that inner joins this iterator with a [MapGet].
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use std::collections::BTreeMap;
+    /// # use collections::{cons, MapJoin};
+    /// let mut map = BTreeMap::new();
+    /// let mut map2 = BTreeMap::new();
+    /// map.insert(1, 1);
+    /// map.insert(2, 2);
+    /// map2.insert(1, 3);
+    /// map2.insert(2, 4);
+    /// let mut iter = map.iter().cons().map_join(&map2);
+    /// assert_eq!(iter.next(), Some(cons!(&1, &1, &3)));
+    /// assert_eq!(iter.next(), Some(cons!(&2, &2, &4)));
+    /// assert_eq!(iter.next(), None);
+    /// ```
     #[inline(always)]
     fn map_join<M>(self, rhs: &'a M) -> MapJoinIter<Self, &'a M>
     where
         M: MapGet<K>,
         M::Key: Borrow<K>,
+        Self::Item: Cons,
     {
         MapJoinIter {
             iter: self,
@@ -25,12 +56,28 @@ pub trait MapJoin<'a, K: 'a, V>: Iterator<Item = (&'a K, V)> + Sized {
         }
     }
 
-    /// Returns an iterator adaptor that left joins this iterator with a `Map`.
+    /// Returns an iterator adaptor that left joins this iterator with a [MapGet].
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use std::collections::BTreeMap;
+    /// # use collections::{cons, MapJoin};
+    /// let mut map = BTreeMap::new();
+    /// let mut map2 = BTreeMap::new();
+    /// map.insert(1, 1);
+    /// map.insert(2, 2);
+    /// map2.insert(1, 3);
+    /// let mut iter = map.iter().cons().map_join_left(&map2);
+    /// assert_eq!(iter.next(), Some(cons!(&1, &1, Some(&3))));
+    /// assert_eq!(iter.next(), Some(cons!(&2, &2, None)));
+    /// assert_eq!(iter.next(), None);
+    /// ```
     #[inline(always)]
     fn map_join_left<M>(self, rhs: &'a M) -> MapJoinLeftIter<Self, &'a M>
     where
         M: MapGet<K>,
         M::Key: Borrow<K>,
+        Self::Item: Cons,
     {
         MapJoinLeftIter {
             iter: self,
@@ -40,6 +87,20 @@ pub trait MapJoin<'a, K: 'a, V>: Iterator<Item = (&'a K, V)> + Sized {
 
     /// Returns an iterator adaptor that left exclusive joins this iterator with a `Map`.
     /// The returned iterator will yield only the elements with keys not in the RHS map.
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use std::collections::BTreeMap;
+    /// # use collections::{cons, MapJoin};
+    /// let mut map = BTreeMap::new();
+    /// let mut map2 = BTreeMap::new();
+    /// map.insert(1, 1);
+    /// map.insert(2, 2);
+    /// map2.insert(1, 3);
+    /// let mut iter = map.iter().cons().map_join_left_excl(&map2);
+    /// assert_eq!(iter.next(), Some(cons!(&2, &2)));
+    /// assert_eq!(iter.next(), None);
+    /// ```
     #[inline(always)]
     fn map_join_left_excl<M>(self, rhs: &'a M) -> MapJoinLeftExclIter<Self, &'a M>
     where
@@ -52,13 +113,27 @@ pub trait MapJoin<'a, K: 'a, V>: Iterator<Item = (&'a K, V)> + Sized {
         }
     }
 
-    /// Inner joins with a `MapMut`.
+    /// Inner joins with a [MapMut].
     ///
     /// # Safety
     /// Self must be a map iterator that never returns duplicate keys.
     /// Otherwise, this method may potentially hand out multiple mutable references to the same RHS value!
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use std::collections::BTreeMap;
+    /// # use collections::{cons, MapJoin};
+    /// let mut map = BTreeMap::new();
+    /// let mut map2 = BTreeMap::new();
+    /// map.insert(1, 1);
+    /// map2.insert(1, 3);
+    /// let mut iter = map.iter().cons().map_join_mut(&mut map2);
+    /// let cons!(_, _, v) = iter.next().unwrap();
+    /// *v *= 2;
+    /// assert_eq!(map2.get(&1), Some(&6));
+    /// ```
     #[inline(always)]
-    unsafe fn map_join_mut<M>(self, rhs: &'a mut M) -> MapJoinIter<Self, &'a mut M>
+    fn map_join_mut<M>(self, rhs: &'a mut M) -> MapJoinIter<Self, &'a mut M>
     where
         M: MapMut<K>,
         M::Key: Borrow<K>,
@@ -69,13 +144,28 @@ pub trait MapJoin<'a, K: 'a, V>: Iterator<Item = (&'a K, V)> + Sized {
         }
     }
 
-    /// Left joins with a `MapMut`.
+    /// Left joins with a [MapMut].
     ///
     /// # Safety
     /// Self must be a map iterator that never returns duplicate keys.
     /// Otherwise, this method may potentially hand out multiple mutable references to the same RHS value!
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use std::collections::BTreeMap;
+    /// # use collections::{cons, MapJoin};
+    /// let mut map = BTreeMap::new();
+    /// let mut map2 = BTreeMap::new();
+    /// map.insert(1, 1);
+    /// map2.insert(1, 3);
+    /// let mut iter = map.iter().cons().map_join_left_mut(&mut map2);
+    /// if let Some(cons!(_, _, {Some(v)})) = iter.next() {
+    ///     *v *= 2;
+    /// }
+    /// assert_eq!(map2.get(&1), Some(&6));
+    /// ```
     #[inline(always)]
-    unsafe fn map_join_left_mut<M>(self, rhs: &'a mut M) -> MapJoinLeftIter<Self, &'a mut M>
+    fn map_join_left_mut<M>(self, rhs: &'a mut M) -> MapJoinLeftIter<Self, &'a mut M>
     where
         M: MapMut<K>,
         M::Key: Borrow<K>,
@@ -87,15 +177,10 @@ pub trait MapJoin<'a, K: 'a, V>: Iterator<Item = (&'a K, V)> + Sized {
     }
 }
 
-impl<'a, T, K, V> MapJoin<'a, K, V> for T
-where
-    T: Iterator<Item = (&'a K, V)> + Sized,
-    K: 'a,
-{
-}
+impl<'a, T, K: 'a, V> MapJoin<'a, K, V> for T where T: Iterator<Item = (&'a K, V)> {}
 
 /// Iterator adaptor that inner joins 2 maps.
-#[derive(Debug)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct MapJoinIter<LHS: Iterator, RHS> {
     iter: LHS,
     map: RHS,
@@ -106,14 +191,15 @@ where
     LHS: Iterator<Item = (&'a K, V)>,
     RHS: MapGet<K>,
     RHS::Key: Borrow<K>,
+    V: Concat<Cons!(&'a RHS::Value)>,
 {
-    type Item = (&'a K, (&'a RHS::Value, V));
+    type Item = <(&'a K, V) as Concat<Cons!(&'a RHS::Value)>>::Output;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         while let Some((key, lval)) = self.iter.next() {
             if let Some(rval) = self.map.get(key) {
-                return Some((key, (rval, lval)));
+                return Some((key, lval).concat(cons!(rval)));
             }
         }
         None
@@ -130,8 +216,9 @@ where
     LHS: Iterator<Item = (&'a K, V)>,
     RHS: MapMut<K>,
     RHS::Key: Borrow<K>,
+    V: Concat<Cons!(&'a mut RHS::Value)>,
 {
-    type Item = (&'a K, (&'a mut RHS::Value, V));
+    type Item = <(&'a K, V) as Concat<Cons!(&'a mut RHS::Value)>>::Output;
 
     /// Advances the iterator and returns the next value.
     ///
@@ -144,7 +231,7 @@ where
                 // Safety: there must be no duplicate key so that we do not hand out
                 // multiple mutable references to the same value within RHS
                 let rval = unsafe { &mut *(rval as *mut _) };
-                return Some((key, (rval, lval)));
+                return Some((key, lval).concat(cons!(rval)));
             }
         }
         None
@@ -164,7 +251,7 @@ where
 }
 
 /// Iterator adaptor that left joins 2 maps.
-#[derive(Debug)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct MapJoinLeftIter<LHS: Iterator, RHS> {
     iter: LHS,
     map: RHS,
@@ -175,14 +262,15 @@ where
     LHS: Iterator<Item = (&'a K, V)>,
     RHS: MapGet<K>,
     RHS::Key: Borrow<K>,
+    V: Concat<Cons!(Option<&'a RHS::Value>)>,
 {
-    type Item = (&'a K, (Option<&'a RHS::Value>, V));
+    type Item = <(&'a K, V) as Concat<Cons!(Option<&'a RHS::Value>)>>::Output;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()
-            .map(|(key, lval)| (key, (self.map.get(key), lval)))
+            .map(|(key, lval)| (key, lval).concat(cons!(self.map.get(key))))
     }
 
     #[inline]
@@ -196,8 +284,9 @@ where
     LHS: Iterator<Item = (&'a K, V)>,
     RHS: MapMut<K>,
     RHS::Key: Borrow<K>,
+    V: Concat<Cons!(Option<&'a mut RHS::Value>)>,
 {
-    type Item = (&'a K, (Option<&'a mut RHS::Value>, V));
+    type Item = <(&'a K, V) as Concat<Cons!(Option<&'a mut RHS::Value>)>>::Output;
 
     /// Advances the iterator and returns the next value.
     ///
@@ -212,7 +301,7 @@ where
                 // Safety: there must be no duplicate key so that we do not hand out
                 // multiple mutable references to the same value within RHS
                 .map(|rval| unsafe { &mut *(rval as *mut _) });
-            (key, (rval, lval))
+            (key, lval).concat(cons!(rval))
         })
     }
 
@@ -230,7 +319,7 @@ where
 }
 
 /// Iterator adaptor that left exclusive joins 2 maps.
-#[derive(Debug)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct MapJoinLeftExclIter<LHS: Iterator, RHS> {
     iter: LHS,
     map: RHS,
