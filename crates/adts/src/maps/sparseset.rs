@@ -483,7 +483,7 @@ mod core_impl {
 
 mod collections_impl {
     use super::SparseSet;
-    use crate::{Clear, Len, Map, MapGet, MapInsert, MapMut, Retain};
+    use crate::{Clear, Len, Map, MapGet, MapInsert, MapMut, MapRemove, Retain};
     use genindex::GenIndex;
 
     impl<T, I> Clear for SparseSet<T, I> {
@@ -523,10 +523,15 @@ mod collections_impl {
         fn get_mut(&mut self, key: &I) -> Option<&mut Self::Value> {
             self.get_mut(key)
         }
+    }
 
+    impl<T, I: GenIndex> MapRemove<I> for SparseSet<T, I>
+    where
+        I::Index: TryInto<usize>,
+    {
         #[inline]
-        fn remove(&mut self, key: &I) -> Option<Self::Value> {
-            self.remove(key)
+        fn remove(&mut self, key: &I) -> Option<(Self::Key, Self::Value)> {
+            Some((*key, self.remove(key)?))
         }
     }
 
@@ -606,7 +611,7 @@ mod serde_impl {
 #[cfg(test)]
 mod tests {
     use super::SparseSet;
-    use crate::{Clear, Len, MapGet, MapInsert, MapMut, Retain};
+    use crate::{Clear, Len, MapGet, MapInsert, MapMut, MapRemove, Retain};
     use alloc::vec::Vec;
     use core::hash::{Hash, Hasher};
     use genindex::{GenIndex, IndexU64};
@@ -680,8 +685,14 @@ mod tests {
         let new_value = 123;
         *MapMut::get_mut(&mut map, &first).unwrap() = new_value;
         assert_eq!(MapGet::get(&map, &first), Some(&new_value));
+    }
 
-        assert_eq!(MapMut::remove(&mut map, &first), Some(new_value));
+    #[test]
+    fn test_map_remove() {
+        let mut map = create_map();
+        let first = *map.iter().next().unwrap().0;
+
+        assert_eq!(MapRemove::remove(&mut map, &first), Some((first, 0)));
         assert_eq!(MapGet::get(&map, &first), None);
     }
 

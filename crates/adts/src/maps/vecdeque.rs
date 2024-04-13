@@ -1,10 +1,10 @@
 use crate::{
     Clear, Dequeue, Len, Map, MapGet, MapInsert, MapMut, MapRemove, Merge, Pop, Push, Retain, Rev,
 };
-use alloc::vec::Vec;
+use alloc::collections::VecDeque;
 use core::mem::replace;
 
-impl<T> Len for Vec<T> {
+impl<T> Len for VecDeque<T> {
     #[inline]
     fn len(&self) -> usize {
         self.len()
@@ -16,47 +16,43 @@ impl<T> Len for Vec<T> {
     }
 }
 
-impl<T> Clear for Vec<T> {
+impl<T> Clear for VecDeque<T> {
     #[inline]
     fn clear(&mut self) {
         self.clear();
     }
 }
 
-impl<T> Push for Vec<T> {
+impl<T> Push for VecDeque<T> {
     type Index = usize;
     type Value = T;
 
     #[inline]
     fn push(&mut self, value: Self::Value) -> Self::Index {
-        self.push(value);
+        self.push_back(value);
         self.len() - 1
     }
 }
 
-impl<T> Pop for Vec<T> {
+impl<T> Pop for VecDeque<T> {
     type Value = T;
 
     #[inline]
     fn pop(&mut self) -> Option<Self::Value> {
-        self.pop()
+        self.pop_back()
     }
 }
 
-impl<T> Dequeue for Vec<T> {
+impl<T> Dequeue for VecDeque<T> {
     type Value = T;
 
     #[inline]
     fn dequeue(&mut self) -> Option<Self::Value> {
-        if self.len() > 0 {
-            Some(self.remove(0))
-        } else {
-            None
-        }
+        self.pop_front()
     }
 }
 
-impl<T> Merge for Vec<T> {
+impl<T> Merge for VecDeque<T> {
     type Output = Self;
 
     #[inline]
@@ -66,7 +62,7 @@ impl<T> Merge for Vec<T> {
     }
 }
 
-impl<T> Rev for Vec<T> {
+impl<T> Rev for VecDeque<T> {
     type Output = Self;
 
     #[inline]
@@ -75,15 +71,15 @@ impl<T> Rev for Vec<T> {
     }
 }
 
-impl<T> Map for Vec<T> {
+impl<T> Map for VecDeque<T> {
     type Key = usize;
     type Value = T;
 }
 
-impl<T> MapGet<usize> for Vec<T> {
+impl<T> MapGet<usize> for VecDeque<T> {
     #[inline]
     fn get(&self, key: &usize) -> Option<&Self::Value> {
-        self.as_slice().get(*key)
+        self.get(*key)
     }
 
     #[inline]
@@ -92,26 +88,27 @@ impl<T> MapGet<usize> for Vec<T> {
     }
 }
 
-impl<T> MapMut<usize> for Vec<T> {
+impl<T> MapMut<usize> for VecDeque<T> {
     #[inline]
     fn get_mut(&mut self, key: &usize) -> Option<&mut Self::Value> {
-        self.as_mut_slice().get_mut(*key)
+        self.get_mut(*key)
     }
 }
 
-impl<T> MapRemove<usize> for Vec<T> {
-    /// Removes and returns the element at given index, shifting all elements after it to the left.
+impl<T> MapRemove<usize> for VecDeque<T> {
+    /// Removes and returns the element at given index.
+    /// Whichever end is closer to the removal point will be moved to make room.
     #[inline]
     fn remove(&mut self, key: &usize) -> Option<(Self::Key, Self::Value)> {
         if self.contains_key(key) {
-            Some((*key, self.remove(*key)))
+            Some((*key, self.remove(*key)?))
         } else {
             None
         }
     }
 }
 
-impl<T: Default> MapInsert for Vec<T> {
+impl<T: Default> MapInsert for VecDeque<T> {
     /// Replaces an element at given index.
     #[inline]
     fn insert(&mut self, key: Self::Key, value: Self::Value) -> Option<Self::Value> {
@@ -123,7 +120,7 @@ impl<T: Default> MapInsert for Vec<T> {
     }
 }
 
-impl<T> Retain for Vec<T> {
+impl<T> Retain for VecDeque<T> {
     type Key = usize;
     type Value = T;
 
@@ -143,11 +140,11 @@ mod tests {
     use crate::{
         Clear, Dequeue, Len, MapGet, MapInsert, MapMut, MapRemove, Merge, Pop, Push, Retain, Rev,
     };
-    use alloc::vec;
+    use alloc::{collections::VecDeque, vec};
 
     #[test]
     fn test_clear_len() {
-        let mut vec = vec![0, 1, 2];
+        let mut vec: VecDeque<i32> = vec![0, 1, 2].into();
         assert_eq!(Len::len(&vec), 3);
         Clear::clear(&mut vec);
         assert!(Len::is_empty(&vec));
@@ -155,7 +152,7 @@ mod tests {
 
     #[test]
     fn test_map_get() {
-        let vec = vec![0, 1, 2];
+        let vec: VecDeque<i32> = vec![0, 1, 2].into();
         assert!(MapGet::contains_key(&vec, &0));
         assert_eq!(MapGet::get(&vec, &1), Some(&1));
         assert_eq!(MapGet::get(&vec, &3), None);
@@ -163,41 +160,41 @@ mod tests {
 
     #[test]
     fn test_push() {
-        let mut vec = vec![0, 1, 2];
+        let mut vec: VecDeque<i32> = vec![0, 1, 2].into();
         assert_eq!(Push::push(&mut vec, 3), 3);
         assert_eq!(vec, vec![0, 1, 2, 3]);
     }
 
     #[test]
     fn test_pop() {
-        let mut vec = vec![0, 1, 2];
+        let mut vec: VecDeque<i32> = vec![0, 1, 2].into();
         assert_eq!(Pop::pop(&mut vec), Some(2));
         assert_eq!(vec, vec![0, 1]);
     }
 
     #[test]
     fn test_dequeue() {
-        let mut vec = vec![0, 1, 2];
+        let mut vec: VecDeque<i32> = vec![0, 1, 2].into();
         assert_eq!(Dequeue::dequeue(&mut vec), Some(0));
         assert_eq!(vec, vec![1, 2]);
     }
 
     #[test]
     fn test_concat() {
-        let vec = vec![0, 1, 2];
-        let vec2 = vec![3, 4];
+        let vec: VecDeque<i32> = vec![0, 1, 2].into();
+        let vec2 = vec![3, 4].into();
         assert_eq!(Merge::merge(vec, vec2), vec![0, 1, 2, 3, 4]);
     }
 
     #[test]
     fn test_rev() {
-        let vec = vec![0, 1, 2];
+        let vec: VecDeque<i32> = vec![0, 1, 2].into();
         assert_eq!(Rev::rev(vec), vec![2, 1, 0]);
     }
 
     #[test]
     fn test_map_mut() {
-        let mut vec = vec![0, 1, 2];
+        let mut vec: VecDeque<i32> = vec![0, 1, 2].into();
 
         let new_value = 123;
         *MapMut::get_mut(&mut vec, &1).unwrap() = new_value;
@@ -206,14 +203,14 @@ mod tests {
 
     #[test]
     fn test_map_remove() {
-        let mut vec = vec![0, 1, 2];
+        let mut vec: VecDeque<i32> = vec![0, 1, 2].into();
         assert_eq!(MapRemove::remove(&mut vec, &1), Some((1, 1)));
         assert_eq!(vec, vec![0, 2]);
     }
 
     #[test]
     fn test_map_insert() {
-        let mut vec = vec![0, 1, 2];
+        let mut vec: VecDeque<i32> = vec![0, 1, 2].into();
 
         let new_value = 123;
         assert_eq!(MapInsert::insert(&mut vec, 1, new_value), Some(1));
@@ -225,7 +222,7 @@ mod tests {
 
     #[test]
     fn test_retain() {
-        let mut vec = vec![0, 1, 2];
+        let mut vec: VecDeque<i32> = vec![0, 1, 2].into();
 
         Retain::retain(&mut vec, |_, val| {
             if *val == 1 {

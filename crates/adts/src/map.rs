@@ -26,16 +26,22 @@ where
     }
 }
 
-/// Mutator for a map.
+/// Mutable getter for a map.
 pub trait MapMut<K: ?Sized>: MapGet<K>
 where
     Self::Key: Borrow<K>,
 {
     /// Returns a mutable reference to the value corresponding to the `key` if exists.
     fn get_mut(&mut self, key: &K) -> Option<&mut Self::Value>;
+}
 
-    /// Removes and returns the element at `key` from the map if exists.
-    fn remove(&mut self, key: &K) -> Option<Self::Value>;
+/// Operation to remove from a map.
+pub trait MapRemove<K: ?Sized>: Map
+where
+    Self::Key: Borrow<K>,
+{
+    /// Removes and returns the entry at `key` from the map if exists.
+    fn remove(&mut self, key: &K) -> Option<(Self::Key, Self::Value)>;
 }
 
 /// Operation to insert into a map.

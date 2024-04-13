@@ -1,5 +1,6 @@
 //! Helpers for cons tuple type.
 
+use crate::{Merge, Rev};
 use core::marker::PhantomData;
 
 /// Constructs a [trait@Cons] based on the values or identifiers passed in.
@@ -14,8 +15,7 @@ use core::marker::PhantomData;
 /// assert_eq!(c3, Some(45));
 ///
 /// // LHS patterns needs to be escaped with {}
-/// let matched = if let cons!(_, _, {Some(c3)}) = cons!(123f32, "hello", Some(45)) { true } else { false };
-/// assert!(matched);
+/// let cons!(_, _, {Some(c3)}) = cons!(123f32, "hello", Some(45)) else { panic!(); };
 ///
 /// let cons!(c1, c2, c3, ..rest) = cons!(1, 2, 3, 4, 5);
 /// assert_eq!(rest, cons!(4, 5));
@@ -91,6 +91,13 @@ macro_rules! Cons {
 
 /// Trait for a [Cons](https://en.wikipedia.org/wiki/Cons).
 pub trait Cons: Sized {
+    /// The type of the head of this [Cons].
+    type Head;
+
+    /// The type of the tail of this [Cons].
+    type Tail: Cons;
+
+    /// Length of this [Cons].
     const LEN: usize;
 
     /// Returns the length of cons.
@@ -118,22 +125,23 @@ pub trait Cons: Sized {
         Self::LEN == 0
     }
 
-    /// Gets an element by type from this cons.
+    /// Gets the first element of given type from this [Cons].
     ///
     /// # Examples
     /// ```
     /// # use adts::{cons, Cons};
-    /// assert_eq!(*cons!(1f32, 1i32, 1u32).get::<i32, _>(), 1i32);
+    /// let v: i32 = *cons!(1f32, 1i32, 1u32).get();
+    /// assert_eq!(v, 1i32);
     /// ```
     #[inline]
     fn get<T, Index>(&self) -> &T
     where
-        Self: ConsGetter<T, Index>,
+        Self: Get<T, Index>,
     {
-        ConsGetter::get(self)
+        Get::get(self)
     }
 
-    /// Mutably gets an element by type from this cons.
+    /// Mutably gets the first element of given type from this [Cons].
     /// # Examples
     /// ```
     /// # use adts::{cons, Cons};
@@ -144,12 +152,12 @@ pub trait Cons: Sized {
     #[inline]
     fn get_mut<T, Index>(&mut self) -> &mut T
     where
-        Self: ConsGetter<T, Index>,
+        Self: Get<T, Index>,
     {
-        ConsGetter::get_mut(self)
+        Get::get_mut(self)
     }
 
-    /// Concats this cons with RHS.
+    /// Concats this [Cons] with RHS.
     ///
     /// # Examples
     /// ```
@@ -158,14 +166,14 @@ pub trait Cons: Sized {
     /// assert_eq!([c1, c2, c3, c4, c5], [1, 2, 3, 4, 5]);
     /// ```
     #[inline]
-    fn concat<RHS: Cons>(self, rhs: RHS) -> <Self as Concat<RHS>>::Output
+    fn concat<RHS: Cons>(self, rhs: RHS) -> <Self as Merge<RHS>>::Output
     where
-        Self: Concat<RHS>,
+        Self: Merge<RHS>,
     {
-        Concat::concat(self, rhs)
+        Merge::merge(self, rhs)
     }
 
-    /// Reverse this cons.
+    /// Reverse this [Cons].
     //
     /// # Examples
     /// ```
@@ -174,66 +182,52 @@ pub trait Cons: Sized {
     /// assert_eq!([c1, c2, c3, c4, c5], [5, 4, 3, 2, 1]);
     /// ```
     #[inline]
-    fn rev(self) -> <Self as IntoRev>::Output
+    fn rev(self) -> <Self as Rev>::Output
     where
-        Self: IntoRev,
+        Self: Rev,
     {
-        IntoRev::rev(self)
+        Rev::rev(self)
     }
 }
 
 impl Cons for () {
+    type Head = ();
+    type Tail = ();
     const LEN: usize = 0;
 }
 
 impl<H, T: Cons> Cons for (H, T) {
+    type Head = H;
+    type Tail = T;
     const LEN: usize = 1 + T::LEN;
 }
 
-/// Trait for object concatenation.
-pub trait Concat<RHS> {
-    /// Output type.
-    type Output;
-
-    /// Concats with RHS.
-    fn concat(self, rhs: RHS) -> Self::Output;
-}
-
-impl<RHS> Concat<RHS> for ()
+impl<RHS> Merge<RHS> for ()
 where
     RHS: Cons,
 {
     type Output = RHS;
 
     #[inline(always)]
-    fn concat(self, rhs: RHS) -> RHS {
+    fn merge(self, rhs: RHS) -> RHS {
         rhs
     }
 }
 
-impl<H, Tail, RHS> Concat<RHS> for (H, Tail)
+impl<H, Tail, RHS> Merge<RHS> for (H, Tail)
 where
-    Tail: Concat<RHS>,
+    Tail: Merge<RHS>,
     RHS: Cons,
 {
-    type Output = (H, <Tail as Concat<RHS>>::Output);
+    type Output = (H, <Tail as Merge<RHS>>::Output);
 
     #[inline(always)]
-    fn concat(self, rhs: RHS) -> Self::Output {
-        (self.0, self.1.concat(rhs))
+    fn merge(self, rhs: RHS) -> Self::Output {
+        (self.0, self.1.merge(rhs))
     }
 }
 
-/// Trait for reversing self.
-pub trait IntoRev {
-    /// Output type.
-    type Output;
-
-    /// Revert self.
-    fn rev(self) -> Self::Output;
-}
-
-impl IntoRev for () {
+impl Rev for () {
     type Output = ();
 
     #[inline(always)]
@@ -242,21 +236,21 @@ impl IntoRev for () {
     }
 }
 
-impl<T, Tail> IntoRev for (T, Tail)
+impl<T, Tail> Rev for (T, Tail)
 where
-    Tail: IntoRev,
-    <Tail as IntoRev>::Output: Concat<(T, ())>,
+    Tail: Rev,
+    <Tail as Rev>::Output: Merge<(T, ())>,
 {
-    type Output = <<Tail as IntoRev>::Output as Concat<(T, ())>>::Output;
+    type Output = <<Tail as Rev>::Output as Merge<(T, ())>>::Output;
 
     #[inline(always)]
     fn rev(self) -> Self::Output {
-        self.1.rev().concat((self.0, ()))
+        self.1.rev().merge((self.0, ()))
     }
 }
 
 /// Trait for getting a [trait@Cons] element by type.
-pub trait ConsGetter<T, I> {
+pub trait Get<T, I> {
     /// Gets an element by type from cons.
     fn get(&self) -> &T;
 
@@ -264,7 +258,7 @@ pub trait ConsGetter<T, I> {
     fn get_mut(&mut self) -> &mut T;
 }
 
-impl<T, Tail> ConsGetter<T, Here> for (T, Tail) {
+impl<T, Tail> Get<T, Here> for (T, Tail) {
     #[inline(always)]
     fn get(&self) -> &T {
         &self.0
@@ -276,25 +270,25 @@ impl<T, Tail> ConsGetter<T, Here> for (T, Tail) {
     }
 }
 
-impl<Head, Tail, FromTail, TailIndex> ConsGetter<FromTail, There<TailIndex>> for (Head, Tail)
+impl<T, Head, Tail, TailIndex> Get<T, There<TailIndex>> for (Head, Tail)
 where
-    Tail: ConsGetter<FromTail, TailIndex>,
+    Tail: Get<T, TailIndex>,
 {
     #[inline(always)]
-    fn get(&self) -> &FromTail {
+    fn get(&self) -> &T {
         self.1.get()
     }
 
     #[inline(always)]
-    fn get_mut(&mut self) -> &mut FromTail {
+    fn get_mut(&mut self) -> &mut T {
         self.1.get_mut()
     }
 }
 
-/// Used as an index into a [trait@Cons].
+/// Used as a matching index indicator in a [trait@Cons].
 pub struct Here;
 
-/// Used as an index into a [trait@Cons].
+/// Used as an non-matching index indicator in a [trait@Cons].
 pub struct There<T> {
     marker: PhantomData<T>,
 }

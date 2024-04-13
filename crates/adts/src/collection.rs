@@ -1,4 +1,4 @@
-//! Collection traits.
+//! Generic collection traits.
 
 /// A collection with length measure.
 pub trait Len {
@@ -31,23 +31,20 @@ pub trait Retain {
     fn retain(&mut self, f: impl FnMut(&Self::Key, &mut Self::Value) -> bool);
 }
 
-/// Operation to push new value into collection.
-pub trait Push {
-    /// Index type
-    type Index;
+/// Operation to merge collections.
+pub trait Merge<RHS = Self> {
+    /// Output type.
+    type Output;
 
-    /// Value type
-    type Value;
-
-    /// Pushes new `value` into the collection and returns the element's assigned index.
-    fn push(&mut self, value: Self::Value) -> Self::Index;
+    /// Returns self merged with `rhs`.
+    fn merge(self, rhs: RHS) -> Self::Output;
 }
 
-/// Operation to pop value from collection.
-pub trait Pop {
-    /// Value type
-    type Value;
+/// Operation to reverse a collection.
+ pub trait Rev {
+    /// Output type.
+    type Output;
 
-    /// Removes the top element from collection and returns it, or None if it is empty.
-    fn pop(&mut self) -> Option<Self::Value>;
+    /// Returns self in reversed order.
+    fn rev(self) -> Self::Output;
 }

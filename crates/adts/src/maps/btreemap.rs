@@ -1,4 +1,6 @@
-use crate::{Clear, Len, Map, MapGet, MapInsert, MapMut, Retain};
+use crate::{
+    Clear, Dequeue, Key, Len, Map, MapGet, MapInsert, MapMut, MapRemove, Merge, Pop, Push, Retain,
+};
 use alloc::collections::BTreeMap;
 use core::borrow::Borrow;
 
@@ -43,10 +45,12 @@ impl<B: ?Sized + Ord, K: Borrow<B> + Ord, V> MapMut<B> for BTreeMap<K, V> {
     fn get_mut(&mut self, key: &B) -> Option<&mut Self::Value> {
         self.get_mut(key)
     }
+}
 
+impl<B: ?Sized + Ord, K: Borrow<B> + Ord, V> MapRemove<B> for BTreeMap<K, V> {
     #[inline]
-    fn remove(&mut self, key: &B) -> Option<Self::Value> {
-        self.remove(key)
+    fn remove(&mut self, key: &B) -> Option<(Self::Key, Self::Value)> {
+        self.remove_entry(key)
     }
 }
 
@@ -67,9 +71,51 @@ impl<K: Ord, V> Retain for BTreeMap<K, V> {
     }
 }
 
+impl<K: Ord, V> Merge for BTreeMap<K, V> {
+    type Output = Self;
+
+    #[inline]
+    fn merge(mut self, mut rhs: Self) -> Self {
+        self.append(&mut rhs);
+        self
+    }
+}
+
+impl<K: Clone + Ord, V: Key<K>> Push for BTreeMap<K, V> {
+    type Index = K;
+    type Value = V;
+
+    #[inline]
+    fn push(&mut self, value: Self::Value) -> Self::Index {
+        let key = value.key();
+        self.insert(key.clone(), value);
+        key
+    }
+}
+
+impl<K: Ord, V> Pop for BTreeMap<K, V> {
+    type Value = V;
+
+    #[inline]
+    fn pop(&mut self) -> Option<Self::Value> {
+        Some(self.pop_first()?.1)
+    }
+}
+
+impl<K: Ord, V> Dequeue for BTreeMap<K, V> {
+    type Value = V;
+
+    #[inline]
+    fn dequeue(&mut self) -> Option<Self::Value> {
+        Some(self.pop_last()?.1)
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::{Clear, Len, MapGet, MapInsert, MapMut, Retain};
+    use crate::{
+        Clear, Dequeue, Len, MapGet, MapInsert, MapMut, MapRemove, Merge, Pop, Push, Retain,
+    };
     use alloc::{collections::BTreeMap, format, string::String};
 
     fn create_map() -> BTreeMap<String, u32> {
@@ -89,6 +135,28 @@ mod tests {
     }
 
     #[test]
+    fn test_push() {
+        let mut map = BTreeMap::new();
+        map.insert(1, 1);
+        assert_eq!(Push::push(&mut map, 2), 2);
+        assert_eq!(map.last_key_value(), Some((&2, &2)));
+    }
+
+    #[test]
+    fn test_pop() {
+        let mut map = create_map();
+        assert_eq!(Pop::pop(&mut map), Some(0));
+        assert_eq!(MapGet::get(&map, "0"), None);
+    }
+
+    #[test]
+    fn test_dequeue() {
+        let mut map = create_map();
+        assert_eq!(Dequeue::dequeue(&mut map), Some(9));
+        assert_eq!(MapGet::get(&map, "9"), None);
+    }
+
+    #[test]
     fn test_map_get() {
         let map = create_map();
         assert!(MapGet::contains_key(&map, "0"));
@@ -103,8 +171,12 @@ mod tests {
         let new_value = 123;
         *MapMut::get_mut(&mut map, "1").unwrap() = new_value;
         assert_eq!(map["1"], new_value);
+    }
 
-        assert_eq!(MapMut::remove(&mut map, "1"), Some(new_value));
+    #[test]
+    fn test_map_remove() {
+        let mut map = create_map();
+        assert_eq!(MapRemove::remove(&mut map, "1"), Some(("1".into(), 1)));
         assert_eq!(MapGet::get(&map, "1"), None);
     }
 
@@ -134,5 +206,18 @@ mod tests {
         });
         assert_eq!(map.len(), 1);
         assert_eq!(map["1"], 3);
+    }
+
+    #[test]
+    fn test_merge() {
+        let mut map = BTreeMap::new();
+        map.insert("1", 1);
+        let mut map2 = BTreeMap::new();
+        map2.insert("2", 2);
+
+        let map = Merge::merge(map, map2);
+        assert_eq!(map.len(), 2);
+        assert_eq!(map.get("1"), Some(&1));
+        assert_eq!(map.get("2"), Some(&2));
     }
 }

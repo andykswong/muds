@@ -1,4 +1,4 @@
-use crate::{Clear, Len, Map, MapGet, MapInsert, MapMut, Retain};
+use crate::{Clear, Len, Map, MapGet, MapInsert, MapMut, MapRemove, Merge, Retain};
 use core::{
     borrow::Borrow,
     hash::{BuildHasher, Hash},
@@ -50,10 +50,14 @@ impl<B: ?Sized + Eq + Hash, K: Borrow<B> + Eq + Hash, V, S: BuildHasher> MapMut<
     fn get_mut(&mut self, key: &B) -> Option<&mut Self::Value> {
         self.get_mut(key)
     }
+}
 
+impl<B: ?Sized + Eq + Hash, K: Borrow<B> + Eq + Hash, V, S: BuildHasher> MapRemove<B>
+    for HashMap<K, V, S>
+{
     #[inline]
-    fn remove(&mut self, key: &B) -> Option<Self::Value> {
-        self.remove(key)
+    fn remove(&mut self, key: &B) -> Option<(Self::Key, Self::Value)> {
+        self.remove_entry(key)
     }
 }
 
@@ -74,9 +78,19 @@ impl<K, V, S> Retain for HashMap<K, V, S> {
     }
 }
 
+impl<K: Eq + Hash, V, S: BuildHasher> Merge for HashMap<K, V, S> {
+    type Output = Self;
+
+    #[inline]
+    fn merge(mut self, other: Self) -> Self::Output {
+        self.extend(other.into_iter());
+        self
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::{Clear, Len, MapGet, MapInsert, MapMut, Retain};
+    use crate::{Clear, Len, MapGet, MapInsert, MapMut, MapRemove, Merge, Retain};
     use alloc::{format, string::String};
     use std::collections::HashMap;
 
@@ -111,8 +125,12 @@ mod tests {
         let new_value = 123;
         *MapMut::get_mut(&mut map, "1").unwrap() = new_value;
         assert_eq!(map["1"], new_value);
+    }
 
-        assert_eq!(MapMut::remove(&mut map, "1"), Some(new_value));
+    #[test]
+    fn test_map_remove() {
+        let mut map = create_map();
+        assert_eq!(MapRemove::remove(&mut map, "1"), Some(("1".into(), 1)));
         assert_eq!(MapGet::get(&map, "1"), None);
     }
 
@@ -142,5 +160,18 @@ mod tests {
         });
         assert_eq!(map.len(), 1);
         assert_eq!(map["1"], 3);
+    }
+
+    #[test]
+    fn test_merge() {
+        let mut map = HashMap::new();
+        map.insert("1", 1);
+        let mut map2 = HashMap::new();
+        map2.insert("2", 2);
+
+        let map = Merge::merge(map, map2);
+        assert_eq!(map.len(), 2);
+        assert_eq!(map.get("1"), Some(&1));
+        assert_eq!(map.get("2"), Some(&2));
     }
 }

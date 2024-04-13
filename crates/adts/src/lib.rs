@@ -8,13 +8,16 @@ extern crate alloc;
 extern crate std;
 
 mod collection;
-mod cons;
+mod deque;
 mod join;
 mod map;
 mod maps;
 
 pub use collection::*;
-pub use cons::*;
+pub use deque::*;
 pub use join::*;
 pub use map::*;
 pub use maps::*;
+
+pub mod cons;
+pub use cons::Cons;

@@ -1,4 +1,4 @@
-use crate::{Clear, Len, Map, MapGet, MapInsert, MapMut};
+use crate::{Clear, Cons, Len, Map, MapGet, MapInsert, MapMut, MapRemove};
 use alloc::{boxed::Box, sync::Arc};
 use core::{
     any::{Any, TypeId},
@@ -140,6 +140,49 @@ where
         self.get_by_key_mut(&AnyMapKey::with_type::<V>())
     }
 
+    /// Gets multiple values by type.
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use adts::{AnyMap, Cons, cons};
+    /// let mut map = <AnyMap>::new();
+    /// map.insert(1u32);
+    /// map.insert(2i16);
+    /// assert_eq!(map.multi_get::<Cons!(&i16, &u32)>(), Some(cons!(&2, &1)));
+    /// ```
+    #[inline]
+    pub fn multi_get<'a, C: Cons>(&'a self) -> Option<C::Value>
+    where
+        C: AnyMapMultiGet<'a, Self>,
+    {
+        C::multi_get(&self)
+    }
+
+    /// Mutably gets multiple values by type.
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use adts::{AnyMap, Cons, cons};
+    /// let mut map = <AnyMap>::new();
+    /// map.insert(1u32);
+    /// map.insert(2i16);
+    /// map.insert(3u8);
+    /// if let Some(cons!(second, third, first)) = map.multi_get_mut::<Cons!(&mut i16, &u8, &mut u32)>() {
+    ///     assert_eq!(*third, 3);
+    ///     *second = 3;
+    ///     *first = 0;
+    /// }
+    /// assert_eq!(map.get::<u32>(), Some(&0));
+    /// assert_eq!(map.get::<i16>(), Some(&3));
+    /// ```
+    #[inline]
+    pub fn multi_get_mut<'a, C: Cons>(&'a mut self) -> Option<C::Value>
+    where
+        C: AnyMapMultiMut<'a, Self>,
+    {
+        C::multi_get_mut(self)
+    }
+
     /// Removes and returns a type value from the map if exists.
     ///
     /// # Examples
@@ -152,7 +195,7 @@ where
     #[inline]
     pub fn remove<V: 'static>(&mut self) -> Option<V>
     where
-        M: MapMut<AnyMapKey>,
+        M: MapRemove<AnyMapKey>,
     {
         self.remove_by_key(&AnyMapKey::with_type::<V>())
     }
@@ -224,9 +267,9 @@ where
     #[inline]
     pub fn remove_by_key<V: 'static>(&mut self, key: &AnyMapKey) -> Option<V>
     where
-        M: MapMut<AnyMapKey>,
+        M: MapRemove<AnyMapKey>,
     {
-        self.map.remove(key)?.downcast_into()
+        self.map.remove(key)?.1.downcast_into()
     }
 
     /// Inserts a value to this map for given key and returns existing value.
@@ -255,9 +298,114 @@ where
     }
 }
 
+/// Trait for getting multiple values by type from [AnyMap].
+pub trait AnyMapMultiGet<'a, M> {
+    /// Value type.
+    type Value: Cons;
+
+    /// Gets multiple values from [AnyMap].
+    fn multi_get(map: &'a M) -> Option<Self::Value>;
+}
+
+impl<'a, M> AnyMapMultiGet<'a, M> for () {
+    type Value = ();
+
+    #[inline]
+    fn multi_get(_: &'a M) -> Option<Self::Value> {
+        Some(())
+    }
+}
+
+impl<'a, T: ?Sized, M, V: 'static, Tail> AnyMapMultiGet<'a, AnyMap<T, M>> for (&'a V, Tail)
+where
+    M: MapGet<AnyMapKey, Key = AnyMapKey, Value = Box<T>>,
+    M::Value: Downcast,
+    Tail: AnyMapMultiGet<'a, AnyMap<T, M>>,
+{
+    type Value = (&'a V, Tail::Value);
+
+    #[inline]
+    fn multi_get(map: &'a AnyMap<T, M>) -> Option<Self::Value> {
+        Some((map.get()?, Tail::multi_get(map)?))
+    }
+}
+
+/// Trait for mutably getting multiple values by type from [AnyMap].
+pub trait AnyMapMultiMut<'a, M> {
+    /// Value type.
+    type Value: Cons;
+
+    /// [Cons] of mut types within `Value`.
+    type Mut: Cons + 'static;
+
+    /// Mutably gets multiple values from [AnyMap].
+    fn multi_get_mut(map: &'a mut M) -> Option<Self::Value>;
+}
+
+impl<'a, M> AnyMapMultiMut<'a, M> for () {
+    type Value = ();
+    type Mut = ();
+
+    #[inline]
+    fn multi_get_mut(_: &'a mut M) -> Option<Self::Value> {
+        Some(())
+    }
+}
+
+impl<'a, T: ?Sized, M, V: 'static, Tail> AnyMapMultiMut<'a, AnyMap<T, M>> for (&'a V, Tail)
+where
+    M: MapGet<AnyMapKey, Key = AnyMapKey, Value = Box<T>>,
+    M::Value: Downcast,
+    Tail: AnyMapMultiMut<'a, AnyMap<T, M>>,
+{
+    type Value = (&'a V, Tail::Value);
+    type Mut = Tail::Mut;
+
+    #[inline]
+    fn multi_get_mut(map: &'a mut AnyMap<T, M>) -> Option<Self::Value> {
+        if contains_type_id::<Tail::Mut>(TypeId::of::<V>()) {
+            None
+        } else {
+            let v: *const V = &*map.get()?;
+            Some((unsafe { v.as_ref() }?, Tail::multi_get_mut(map)?))
+        }
+    }
+}
+
+impl<'a, T: ?Sized, M, V: 'static, Tail> AnyMapMultiMut<'a, AnyMap<T, M>> for (&'a mut V, Tail)
+where
+    M: MapMut<AnyMapKey, Key = AnyMapKey, Value = Box<T>>,
+    M::Value: Downcast,
+    Tail: AnyMapMultiMut<'a, AnyMap<T, M>>,
+{
+    type Value = (&'a mut V, Tail::Value);
+    type Mut = (V, Tail::Mut);
+
+    #[inline]
+    fn multi_get_mut(map: &'a mut AnyMap<T, M>) -> Option<Self::Value> {
+        if contains_type_id::<Tail::Mut>(TypeId::of::<V>()) {
+            None
+        } else {
+            let v: *mut V = &mut *map.get_mut()?;
+            Some((unsafe { v.as_mut() }?, Tail::multi_get_mut(map)?))
+        }
+    }
+}
+
+#[inline(always)]
+fn contains_type_id<C: Cons + 'static>(type_id: TypeId) -> bool {
+    if C::LEN > 0 {
+        contains_type_id::<C::Tail>(type_id)
+    } else if type_id == TypeId::of::<C::Head>() {
+        true
+    } else {
+        false
+    }
+}
+
 mod collections_impl {
     use super::AnyMap;
-    use crate::{Clear, Len};
+    use crate::{Clear, Len, Merge};
 
     impl<T: ?Sized, M: Clear> Clear for AnyMap<T, M> {
         #[inline]
@@ -270,6 +418,16 @@ mod collections_impl {
         #[inline]
         fn len(&self) -> usize {
             self.len()
+        }
+    }
+
+    impl<T: ?Sized, M: Merge<Output = M>> Merge for AnyMap<T, M> {
+        type Output = Self;
+
+        #[inline]
+        fn merge(mut self, other: Self) -> Self::Output {
+            self.map = self.map.merge(other.map);
+            self
         }
     }
 }
@@ -327,7 +485,7 @@ impl_box_downcast!(Any + Send + Sync);
 #[cfg(test)]
 mod tests {
     use super::AnyMap;
-    use crate::{Clear, Len};
+    use crate::{Clear, Len, Merge};
     use core::any::Any;
 
     #[test]
@@ -344,5 +502,18 @@ mod tests {
         assert_eq!(Len::len(&map), 1);
         Clear::clear(&mut map);
         assert!(Len::is_empty(&map));
+    }
+
+    #[test]
+    fn test_merge() {
+        let mut map = <AnyMap>::new();
+        map.insert(1usize);
+        let mut map2 = <AnyMap>::new();
+        map2.insert(2i32);
+
+        let map = Merge::merge(map, map2);
+        assert_eq!(Len::len(&map), 2);
+        assert_eq!(map.get::<usize>(), Some(&1));
+        assert_eq!(map.get::<i32>(), Some(&2));
     }
 }

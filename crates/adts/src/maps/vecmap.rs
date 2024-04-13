@@ -364,7 +364,7 @@ mod core_impl {
 
 mod collections_impl {
     use super::VecMap;
-    use crate::{Clear, Len, Map, MapGet, MapInsert, MapMut, Retain};
+    use crate::{Clear, Len, Map, MapGet, MapInsert, MapMut, MapRemove, Retain};
 
     impl<T> Clear for VecMap<T> {
         #[inline]
@@ -397,10 +397,12 @@ mod collections_impl {
         fn get_mut(&mut self, key: &usize) -> Option<&mut Self::Value> {
             self.get_mut(*key)
         }
+    }
 
+    impl<T> MapRemove<usize> for VecMap<T> {
         #[inline]
-        fn remove(&mut self, key: &usize) -> Option<Self::Value> {
-            self.remove(*key)
+        fn remove(&mut self, key: &usize) -> Option<(Self::Key, Self::Value)> {
+            self.remove(*key).map(|v| (*key, v))
         }
     }
 
@@ -452,7 +454,7 @@ mod serde_impl {
 #[cfg(test)]
 mod tests {
     use super::VecMap;
-    use crate::{Clear, Len, MapGet, MapInsert, MapMut, Retain};
+    use crate::{Clear, Len, MapGet, MapInsert, MapMut, MapRemove, Retain};
 
     fn create_map() -> VecMap<usize> {
         let mut map = VecMap::new();
@@ -489,8 +491,12 @@ mod tests {
         let new_value = 123;
         *MapMut::get_mut(&mut map, &2).unwrap() = new_value;
         assert_eq!(MapGet::get(&map, &2), Some(&new_value));
+    }
 
-        assert_eq!(MapMut::remove(&mut map, &2), Some(new_value));
+    #[test]
+    fn test_map_remove() {
+        let mut map = create_map();
+        assert_eq!(MapRemove::remove(&mut map, &2), Some((2, 1)));
         assert_eq!(MapGet::get(&map, &2), None);
     }
 

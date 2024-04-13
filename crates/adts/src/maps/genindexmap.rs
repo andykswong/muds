@@ -1,4 +1,4 @@
-use crate::{Clear, Len, MapGet, MapInsert, MapMut, Retain, VecMap};
+use crate::{Clear, Len, MapGet, MapInsert, MapMut, MapRemove, Retain, VecMap};
 use alloc::collections::BTreeMap;
 use core::{borrow::Borrow, marker::PhantomData};
 use genindex::{GenIndex, IndexPair};
@@ -224,14 +224,12 @@ impl<T, I: GenIndex, M> GenIndexMap<T, I, M> {
     pub fn remove<K>(&mut self, key: &I) -> Option<T>
     where
         I::Index: TryInto<K>,
-        M: MapMut<K, Value = (I, T)>,
+        M: MapGet<K, Value = (I, T)> + MapRemove<K>,
         M::Key: Borrow<K>,
     {
-        if self.get(key).is_some() {
-            Some(self.map.remove(&index_of(key)?)?.1)
-        } else {
-            None
-        }
+        self.get(key)?;
+        let (_, (_, v)) = self.map.remove(&index_of(key)?)?;
+        Some(v)
     }
 
     /// Retains only the elements specified by the predicate, passing a mutable reference to it.
@@ -371,7 +369,7 @@ mod core_impl {
 
 mod collections_impl {
     use super::GenIndexMap;
-    use crate::{Clear, Len, Map, MapGet, MapInsert, MapMut, Retain};
+    use crate::{Clear, Len, Map, MapGet, MapInsert, MapMut, MapRemove, Retain};
     use genindex::GenIndex;
 
     impl<T, I, M: Clear> Clear for GenIndexMap<T, I, M> {
@@ -413,10 +411,16 @@ mod collections_impl {
         fn get_mut(&mut self, key: &I) -> Option<&mut Self::Value> {
             self.get_mut(key)
         }
+    }
 
+    impl<T, I: GenIndex, M> MapRemove<I> for GenIndexMap<T, I, M>
+    where
+        I::Index: TryInto<M::Key>,
+        M: MapGet<<M as Map>::Key, Value = (I, T)> + MapRemove<<M as Map>::Key>,
+    {
         #[inline]
-        fn remove(&mut self, key: &I) -> Option<Self::Value> {
-            self.remove(key)
+        fn remove(&mut self, key: &I) -> Option<(Self::Key, Self::Value)> {
+            Some((*key, self.remove(key)?))
         }
     }
 
@@ -513,7 +517,7 @@ mod serde_impl {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Clear, Len, MapGet, MapInsert, MapMut, Retain};
+    use crate::{Clear, Len, MapGet, MapInsert, MapMut, MapRemove, Retain};
 
     use super::GenIndexMap;
     use genindex::{GenIndex, IndexU64};
@@ -603,8 +607,13 @@ mod tests {
         let new_value = 123;
         *MapMut::get_mut(&mut map, &first).unwrap() = new_value;
         assert_eq!(MapGet::get(&map, &first), Some(&new_value));
+    }
 
-        assert_eq!(MapMut::remove(&mut map, &first), Some(new_value));
+    #[test]
+    fn test_map_remove() {
+        let mut map = create_map();
+        let first = *map.iter().next().unwrap().0;
+        assert_eq!(MapRemove::remove(&mut map, &first), Some((first, 0)));
         assert_eq!(MapGet::get(&map, &first), None);
     }
 

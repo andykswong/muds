@@ -1,11 +1,13 @@
 //! Map trait implementations.
 
 mod anymap;
+mod binaryheap;
 mod btreemap;
 mod genindexmap;
 mod slotmap;
 mod sparseset;
 mod vec;
+mod vecdeque;
 mod vecmap;
 
 #[cfg(feature = "std")]
