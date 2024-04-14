@@ -9,6 +9,7 @@ extern crate std;
 
 mod collection;
 mod deque;
+mod deques;
 mod join;
 mod map;
 mod maps;

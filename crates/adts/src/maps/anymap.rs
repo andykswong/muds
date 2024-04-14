@@ -386,8 +386,8 @@ where
         if contains_type_id::<Tail::Mut>(TypeId::of::<V>()) {
             None
         } else {
-            let v: *mut V = &mut *map.get_mut()?;
-            Some((unsafe { v.as_mut() }?, Tail::multi_get_mut(map)?))
+            let v = unsafe { &mut *(map.get_mut()? as *mut V) };
+            Some((v, Tail::multi_get_mut(map)?))
         }
     }
 }
